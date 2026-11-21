@@ -1,0 +1,13 @@
+Remixicon
+Copyright Remix Design (https://remixicon.com)
+Licensed under the Apache License, Version 2.0.
+https://www.apache.org/licenses/LICENSE-2.0
+
+The following icons are inline SVG paths derived from Remixicon and shipped in
+panel/main.js through panel/src/dom.ts:
+
+  search-line        ri-search-line
+  more-2-fill        ri-more-2-fill
+  file-copy-line     ri-file-copy-line
+  arrow-right-up-line ri-arrow-right-up-line
+  check-line         ri-check-line

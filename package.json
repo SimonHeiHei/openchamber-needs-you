@@ -1,0 +1,61 @@
+{
+  "name": "openchamber-session-control-room",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Cross-project attention queue for OpenChamber: every session that is waiting on you, in one place",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SimonHeiHei/openchamber-session-control-room.git"
+  },
+  "keywords": [
+    "openchamber",
+    "openchamber-extension",
+    "sessions",
+    "attention-queue"
+  ],
+  "engines": {
+    "node": ">=22.5"
+  },
+  "scripts": {
+    "build": "esbuild panel/src/main.ts --bundle --format=iife --platform=browser --outfile=panel/main.js && esbuild status/src/main.ts --bundle --format=iife --platform=browser --outfile=status/main.js",
+    "check": "node --check panel/main.js && node --check status/main.js && node scripts/check-manifest.mjs",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@openchamber/sdk": "^2.7.3",
+    "esbuild": "^0.28.2",
+    "typescript": "^5.9.2"
+  },
+  "openchamber": {
+    "apiVersion": 1,
+    "engines": {
+      "openchamber": ">=2.3.3"
+    },
+    "contributes": {
+      "panel": {
+        "id": "session-control-room",
+        "name": "Session Control Room",
+        "icon": "radar",
+        "entry": "panel/index.html",
+        "mobile": true
+      },
+      "page": {
+        "entry": "panel/page.html",
+        "title": "Control Room",
+        "mobile": true
+      },
+      "statusSection": {
+        "entry": "status/index.html",
+        "title": "Sessions",
+        "height": 76
+      },
+      "capabilities": [
+        "sessions"
+      ],
+      "attach": false
+    }
+  },
+  "author": "SimonHeiHei"
+}
