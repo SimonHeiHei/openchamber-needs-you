@@ -8,11 +8,9 @@
 
 ## 截图预览
 
-<!-- 截图占位：把文件放进 docs/screenshots/，保持下面三个文件名，然后取消注释。 -->
-
-<!-- ![侧栏面板：按紧急度排的队列](docs/screenshots/panel.png) -->
-<!-- ![全屏看板：按项目铺开](docs/screenshots/page.png) -->
-<!-- ![Work Status 条](docs/screenshots/status.png) -->
+![侧栏面板：按紧急度排的队列](docs/screenshots/panel.png)
+![全屏看板：按项目铺开](docs/screenshots/page.png)
+![Work Status 条](docs/screenshots/status.png)
 
 ## 它解决什么
 

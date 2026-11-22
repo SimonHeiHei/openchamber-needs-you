@@ -8,11 +8,9 @@ The category is already validated: vibe-kanban (28.8k★) and claude-squad (8.8k
 
 ## Screenshots
 
-<!-- Placeholder: drop the files into docs/screenshots/, keep these names, then uncomment. -->
-
-<!-- ![Rail panel: the queue, most urgent first](docs/screenshots/panel.png) -->
-<!-- ![Full page: the per-project board](docs/screenshots/page.png) -->
-<!-- ![Work Status strip](docs/screenshots/status.png) -->
+![Rail panel: the queue, most urgent first](docs/screenshots/panel.png)
+![Full page: the per-project board](docs/screenshots/page.png)
+![Work Status strip](docs/screenshots/status.png)
 
 ## What it does
 
