@@ -1,8 +1,8 @@
-# Session Control Room（OpenChamber extension）
+# Needs You（OpenChamber extension）
 
 An [OpenChamber](https://openchamber.dev) extension that compresses the dozens of background sessions across ~20 projects into one question: **which one is waiting on me right now?**
 
-The category is already validated: vibe-kanban (28.8k★) and claude-squad (8.8k★) both manage attention across agent sessions, but each only sees the agents it started. The Control Room only reads the sessions OpenChamber is already running — no second runtime.
+The category is already validated: vibe-kanban (28.8k★) and claude-squad (8.8k★) both manage attention across agent sessions, but each only sees the agents it started. The Needs You only reads the sessions OpenChamber is already running — no second runtime.
 
 [中文](README.md) · English
 
@@ -14,17 +14,17 @@ The category is already validated: vibe-kanban (28.8k★) and claude-squad (8.8k
 
 ## What it does
 
-The sidebar is organised by project: it answers "which sessions does this project have". The question you actually ask is "which project is waiting on me". Those are transposes of each other, and the Control Room only performs that transpose:
+The sidebar is organised by project: it answers "which sessions does this project have". The question you actually ask is "which project is waiting on me". Those are transposes of each other, and the Needs You only performs that transpose:
 
 - **Rail panel** — a cross-project queue. "Waiting on you" is always at the top, and the right of each row is **how long it has been waiting**, not when it last changed.
-- **Full page** (sidebar › Pages › Session Control Room) — a board laid out by project. A project with a blocked session always sorts first; you see where everything is stuck at a glance.
+- **Full page** (sidebar › Pages › Needs You) — a board laid out by project. A project with a blocked session always sorts first; you see where everything is stuck at a glance.
 - **Work Status strip** — one line visible without opening anything. With zero blocked sessions it still reports failures: it never calls "something failed" all clear.
 
 v1 is **read-only**: clicking a row opens that session (`openSession`). Nothing else — no new sessions, no approving permissions, no reading conversations or files.
 
 ## The state language
 
-The host gives two orthogonal fields: `activity` (what is happening now) and `outcome` (how the last turn ended). The Control Room folds them into 8 drawable states, redundant in shape + colour + text:
+The host gives two orthogonal fields: `activity` (what is happening now) and `outcome` (how the last turn ended). The Needs You folds them into 8 drawable states, redundant in shape + colour + text:
 
 | State | Shape | Colour | Trigger |
 |---|---|---|---|
@@ -53,19 +53,19 @@ Failures never count as "waiting on you": nobody is waiting for a reply on `PR #
 **From a folder (development)**: paste the repository path into OpenChamber → **Settings → Extensions** → *Folder, ZIP, or URL*:
 
 ```
-/Users/simon/code/github/openchamber-session-control-room
+/Users/simon/code/github/openchamber-needs-you
 ```
 
 **From Git**:
 
 ```
-https://github.com/SimonHeiHei/openchamber-session-control-room
+https://github.com/SimonHeiHei/openchamber-needs-you
 ```
 
 Or use the deep link, which opens the install dialog:
 
 ```
-openchamber://extensions/install?url=https://github.com/SimonHeiHei/openchamber-session-control-room
+openchamber://extensions/install?url=https://github.com/SimonHeiHei/openchamber-needs-you
 ```
 
 Approve the single capability (next section), reload once, and the radar icon appears on the rail.
@@ -91,7 +91,7 @@ cr.seen  { ids, at }   ← blocked ids only (≤200)
 cr.collapsed / cr.subs / cr.board  ← folding, swap-in/out, page filters
 ```
 
-- At most 32 host subscriptions per iframe. The Control Room uses one `onProjects` plus up to 31 `onSessions`; projects beyond that are listed as "not connected" and can be swapped in by hand. **A project with waiting sessions is never swapped out.**
+- At most 32 host subscriptions per iframe. The Needs You uses one `onProjects` plus up to 31 `onSessions`; projects beyond that are listed as "not connected" and can be swapped in by hand. **A project with waiting sessions is never swapped out.**
 - A failed subscription never empties the queue: the last data stays, and a warning banner says "could not read N projects — some waits may be missing". Every non-ready state distinguishes "nothing" from "unknown".
 - The badge counts only blocked sessions **that are new since the last time you looked**; failures never count. The panel still shows the real total: the badge is a reminder, the panel is the ledger.
 

@@ -119,7 +119,7 @@ const zh: Strings = {
     archived: '已归档',
   },
   panel: {
-    title: '会话控制室',
+    title: '需要你',
     summary: {
       blocked: (n) => `${n} 个在等你`,
       running: (n) => `${n} 个在运行`,
@@ -273,7 +273,7 @@ const en: Strings = {
     archived: 'Archived',
   },
   panel: {
-    title: 'Session Control Room',
+    title: 'Needs You',
     summary: {
       blocked: (n) => `${n} waiting on you`,
       running: (n) => `${n} running`,

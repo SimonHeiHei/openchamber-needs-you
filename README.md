@@ -1,4 +1,4 @@
-# 会话控制室 · Session Control Room（OpenChamber 扩展）
+# 需要你 · Needs You（OpenChamber 扩展）
 
 一个 [OpenChamber](https://openchamber.dev) 扩展：把二十来个项目里几十个后台会话，压成一条问题——**现在哪一个在等我？**
 
@@ -17,7 +17,7 @@
 侧栏按项目组织，回答的是「这个项目的会话有哪些」；你真正要问的是「哪个项目在等我」。两者是转置关系。控制室只做这个转置：
 
 - **侧栏面板**：跨项目的时间队列。「等你」永远在最上面，行右侧写的是**已经等了多久**，不是最后更新时间。
-- **全屏看板**（侧栏 › 页面 › 会话控制室）：按项目铺开。有阻塞的项目永远排在最前，一眼看出全局停在哪。
+- **全屏看板**（侧栏 › 页面 › 需要你）：按项目铺开。有阻塞的项目永远排在最前，一眼看出全局停在哪。
 - **Work Status 条**：不用点开扩展就能看见的一行。0 阻塞时仍然会说出失败数——不把「有失败」说成「一切正常」。
 
 v1 是**只读**的：点一行跳到那个会话（`openSession`），没有别的动作。不新建会话、不批准权限、不读对话、不读文件。
@@ -53,19 +53,19 @@ v1 是**只读**的：点一行跳到那个会话（`openSession`），没有别
 **开发时（文件夹）**：把本仓库的完整路径粘进 OpenChamber → **设置 → 扩展（Extensions）** 的 *Folder, ZIP, or URL* 输入框，例如：
 
 ```
-/Users/simon/code/github/openchamber-session-control-room
+/Users/simon/code/github/openchamber-needs-you
 ```
 
 **从 Git 安装**：
 
 ```
-https://github.com/SimonHeiHei/openchamber-session-control-room
+https://github.com/SimonHeiHei/openchamber-needs-you
 ```
 
 或者点这个深链，OpenChamber 会打开安装对话框：
 
 ```
-openchamber://extensions/install?url=https://github.com/SimonHeiHei/openchamber-session-control-room
+openchamber://extensions/install?url=https://github.com/SimonHeiHei/openchamber-needs-you
 ```
 
 安装后批准那一个能力（见下一节），刷新一次页面，rail 上会出现雷达图标。

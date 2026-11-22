@@ -8,7 +8,7 @@ import { ControlRoomStore } from '../../panel/src/store';
 import { BASE_STYLE, STATUS_STYLE } from '../../panel/src/style';
 import { setLocale, t } from '../../panel/src/strings';
 
-const PANEL_SURFACE_ID = 'plugin:session-control-room';
+const PANEL_SURFACE_ID = 'plugin:needs-you';
 
 const host = connectHost();
 const root = document.querySelector<HTMLElement>('#root');

@@ -1,5 +1,5 @@
 {
-  "name": "openchamber-session-control-room",
+  "name": "openchamber-needs-you",
   "version": "1.0.0",
   "private": true,
   "type": "module",
@@ -7,7 +7,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/SimonHeiHei/openchamber-session-control-room.git"
+    "url": "git+https://github.com/SimonHeiHei/openchamber-needs-you.git"
   },
   "keywords": [
     "openchamber",
@@ -35,20 +35,20 @@
     },
     "contributes": {
       "panel": {
-        "id": "session-control-room",
-        "name": "Session Control Room",
+        "id": "needs-you",
+        "name": "Needs You",
         "icon": "radar",
         "entry": "panel/index.html",
         "mobile": true
       },
       "page": {
         "entry": "panel/page.html",
-        "title": "Control Room",
+        "title": "Needs You",
         "mobile": true
       },
       "statusSection": {
         "entry": "status/index.html",
-        "title": "Sessions",
+        "title": "Needs You",
         "height": 76
       },
       "capabilities": [

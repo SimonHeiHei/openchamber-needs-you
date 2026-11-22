@@ -2050,7 +2050,7 @@ ${GUEST_UI_LOOK_CSS}`;
       archived: "\u5DF2\u5F52\u6863"
     },
     panel: {
-      title: "\u4F1A\u8BDD\u63A7\u5236\u5BA4",
+      title: "\u9700\u8981\u4F60",
       summary: {
         blocked: (n) => `${n} \u4E2A\u5728\u7B49\u4F60`,
         running: (n) => `${n} \u4E2A\u5728\u8FD0\u884C`,
@@ -2197,7 +2197,7 @@ ${GUEST_UI_LOOK_CSS}`;
       archived: "Archived"
     },
     panel: {
-      title: "Session Control Room",
+      title: "Needs You",
       summary: {
         blocked: (n) => `${n} waiting on you`,
         running: (n) => `${n} running`,
@@ -3351,7 +3351,7 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 `;
 
   // status/src/main.ts
-  var PANEL_SURFACE_ID = "plugin:session-control-room";
+  var PANEL_SURFACE_ID = "plugin:needs-you";
   var host = connectHost();
   var root = document.querySelector("#root");
   if (!root) throw new Error("Missing #root");
