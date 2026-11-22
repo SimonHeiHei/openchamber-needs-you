@@ -352,6 +352,13 @@ export const PAGE_STYLE = String.raw`
 .pcard { background: color-mix(in srgb, var(--oc-fg) 4%, transparent); border-radius: var(--oc-radius); padding: 10px 10px 4px; min-width: 0; }
 .pchead { display: flex; align-items: center; gap: 5px; padding: 2px 4px 5px; width: 100%; text-align: left; }
 .pname { flex: 1; min-width: 0; font-size: 12px; font-weight: 600; letter-spacing: -.005em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pmono {
+  flex: none; width: 20px; height: 20px; border-radius: 5px;
+  display: grid; place-items: center; user-select: none;
+  font-size: 10px; font-weight: 600;
+  background: color-mix(in srgb, var(--tone, var(--oc-fg)) 14%, transparent);
+  color: var(--tone-text, var(--oc-fg));
+}
 .pchead .tri { margin-left: 2px; color: var(--oc-muted); }
 .chipb {
   flex: none; font-size: 10px; font-weight: 500; line-height: 16px; padding: 0 5px;

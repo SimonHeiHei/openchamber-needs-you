@@ -96,9 +96,24 @@ const toneOf = (state: StateName): 'warning' | 'error' | 'info' | 'success' | nu
   return null;
 };
 
-const toneVars = (tone: 'warning' | 'error' | 'info' | 'success', node: HTMLElement): void => {
+const toneVars = (tone: 'warning' | 'error' | 'info' | 'success' | 'primary', node: HTMLElement): void => {
   node.style.setProperty('--tone', `var(--oc-${tone})`);
   node.style.setProperty('--tone-text', `var(--oc-${tone}-text)`);
+};
+
+/** Deterministic monogram tone for a project: only tones that carry no state meaning
+ *  (amber = blocked, red = failed are reserved and never used for decoration). */
+const MONO_TONES = ['primary', 'success', 'info'] as const;
+
+const projectTone = (name: string): 'primary' | 'success' | 'info' => {
+  let hash = 0;
+  for (let i = 0; i < name.length; i += 1) hash = (hash * 31 + name.charCodeAt(i)) >>> 0;
+  return MONO_TONES[hash % MONO_TONES.length] ?? 'primary';
+};
+
+const monogram = (name: string): string => {
+  const first = name.trim().charAt(0);
+  return first ? first.toLocaleUpperCase() : '#';
 };
 
 const metaText = (row: Row): string =>
@@ -314,6 +329,9 @@ export function createProjectCard(input: ProjectCardInput): HTMLElement {
   head.type = 'button';
   head.setAttribute('aria-expanded', input.collapsed ? 'false' : 'true');
   head.dataset.card = project.id;
+  const mono = el('span', 'pmono', monogram(project.name));
+  toneVars(projectTone(project.name), mono);
+  head.append(mono);
   head.append(el('span', 'pname', project.name));
   if (input.counts.blocked) {
     const chip = el('span', 'chipb', strings.board.chip.blocked(input.counts.blocked));
