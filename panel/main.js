@@ -3954,7 +3954,11 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 .boardhead .meta { margin-left: auto; font-size: 10.5px; color: var(--oc-muted); font-family: var(--oc-mono); }
 
 .board { display: grid; grid-template-columns: repeat(auto-fill, minmax(272px, 1fr)); gap: 10px; margin-top: 8px; align-items: start; }
-.pcard { background: color-mix(in srgb, var(--oc-fg) 4%, transparent); border-radius: var(--oc-radius); padding: 10px 10px 4px; min-width: 0; }
+.pcard { background: color-mix(in srgb, var(--oc-fg) 4%, transparent); border-radius: var(--oc-radius); padding: 10px 10px 4px; min-width: 0; display: flex; flex-direction: column; }
+/* Uniform default card height: head (~24) + the 6-row cap (6 x 28) + cap footer (~25) + paddings,
+   so short projects keep the same silhouette as full ones. Collapsed cards stay compact. */
+.pcard:not([data-collapsed="true"]) { min-height: calc(10px + 24px + 6 * 28px + 25px + 4px); }
+.pcardbody { flex: 1; }
 .pchead { display: flex; align-items: center; gap: 5px; padding: 2px 4px 5px; width: 100%; text-align: left; }
 .pname { flex: 1; min-width: 0; font-size: 12px; font-weight: 600; letter-spacing: -.005em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .pmono {
