@@ -21,6 +21,8 @@ export interface Strings {
     summary: { blocked: (n: number) => string; running: (n: number) => string; failed: (n: number) => string; loading: string };
     search: { open: string; placeholder: string; results: (query: string, n: number) => string; empty: string };
     more: string;
+    expandGroup: string;
+    collapseGroup: string;
     clearWaiting: string;
     goodNews: { title: string; body: (running: number) => string; quiet: string; ended: (n: number, time: string) => string };
     live: (title: string, state: string) => string;
@@ -59,6 +61,8 @@ export interface Strings {
     chip: { blocked: (n: number) => string; failed: (n: number) => string; running: (n: number) => string };
     archivedLink: (n: number) => string;
     moreSessions: (n: number) => string;
+    moreRows: (n: number) => string;
+    showAll: string;
     fewerSessions: string;
   };
   action: { open: string; copyTitle: string; copyPath: string; copyDone: string; sheetTitle: string };
@@ -133,6 +137,8 @@ const zh: Strings = {
       empty: '没有匹配的会话',
     },
     more: '更多操作',
+    expandGroup: '展开子会话',
+    collapseGroup: '收起子会话',
     clearWaiting: '没有会话在等你',
     goodNews: {
       title: '没有会话需要你',
@@ -193,6 +199,8 @@ const zh: Strings = {
     chip: { blocked: (n) => `等你 ${n}`, failed: (n) => `失败 ${n}`, running: (n) => `运行 ${n}` },
     archivedLink: (n) => `已归档 ${n}`,
     moreSessions: (n) => `还有 ${n} 个会话`,
+    moreRows: (n) => `还有 ${n} 个`,
+    showAll: '显示全部',
     fewerSessions: '收起',
   },
   action: {
@@ -287,6 +295,8 @@ const en: Strings = {
       empty: 'No matching sessions',
     },
     more: 'More actions',
+    expandGroup: 'Expand sub-sessions',
+    collapseGroup: 'Collapse sub-sessions',
     clearWaiting: 'Nothing is waiting on you',
     goodNews: {
       title: 'Nothing needs you',
@@ -347,6 +357,8 @@ const en: Strings = {
     chip: { blocked: (n) => `${n} waiting`, failed: (n) => `${n} failed`, running: (n) => `${n} running` },
     archivedLink: (n) => `${n} archived`,
     moreSessions: (n) => `${n} more sessions`,
+    moreRows: (n) => `${n} more`,
+    showAll: 'Show all',
     fewerSessions: 'Show fewer',
   },
   action: {

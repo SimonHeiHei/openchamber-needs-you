@@ -11,7 +11,7 @@ import {
 } from '@openchamber/sdk/ui';
 
 import * as dom from './dom';
-import { ControlRoomStore, type Row, type StateName, type View } from './store';
+import { ControlRoomStore, type Group, type Row, type StateName, type View } from './store';
 import { BASE_STYLE, PAGE_STYLE, PANEL_STYLE } from './style';
 import { formatClock, metaFor, setLocale, t } from './strings';
 
@@ -318,8 +318,38 @@ function mountPanel(): void {
     return button;
   };
 
-  const fillRows = (container: HTMLElement, key: string, rows: Row[]): void => {
-    dom.reconcile(container, rows, (row) => row.id, (row) => dom.createPanelRow(row, freshIds, onFresh), cacheFor(key));
+  const groupsById = new Map<string, Group>();
+
+  const toggleGroup = (id: string): void => {
+    const group = groupsById.get(id);
+    if (!group) return;
+    store.toggleGroupExpanded(group);
+    render();
+  };
+
+  const rowElement = (row: Row, opts: dom.GroupRowOpts = {}): HTMLElement => {
+    const key = `${row.id}|${opts.group ? 'g' : ''}${opts.child ? 'c' : ''}${opts.search ? 's' : ''}|${opts.expanded ? 1 : 0}`;
+    let entry = cacheFor('rows').get(key);
+    if (!entry) {
+      entry = dom.createPanelRow(row, freshIds, onFresh, { ...opts, onToggle: toggleGroup });
+      cacheFor('rows').set(key, entry);
+    } else {
+      entry.update(row);
+    }
+    return entry.element;
+  };
+
+  const renderGroups = (container: HTMLElement, groups: Group[]): void => {
+    for (const group of groups) {
+      const expanded = store.isGroupExpanded(group);
+      const collapsible = group.children.length > 0 && group.blocked.length === 0;
+      container.append(rowElement(group.head, { group: collapsible, expanded }));
+      if (expanded && group.children.length > 0) {
+        const rail = dom.el('div', 'cr-children');
+        for (const child of group.children) rail.append(rowElement(child, { child: true }));
+        container.append(rail);
+      }
+    }
   };
 
   const showEmpty = (
@@ -411,7 +441,7 @@ function mountPanel(): void {
 
   const searchHits = (view: View): Row[] => {
     const needle = query.trim().toLowerCase();
-    return [...view.waiting, ...view.failed, ...view.running, ...view.ended, ...view.idle].filter((row) =>
+    return view.flatRows.filter((row) =>
       `${row.title} ${row.projectName} ${row.branch ?? ''}`.toLowerCase().includes(needle),
     );
   };
@@ -421,6 +451,8 @@ function mountPanel(): void {
     queue.textContent = '';
     rowById.clear();
     for (const row of view.rows) rowById.set(row.id, row);
+    groupsById.clear();
+    for (const group of view.groups) groupsById.set(group.head.id, group);
     freshIds.clear();
     for (const id of view.fresh) freshIds.add(id);
 
@@ -431,7 +463,7 @@ function mountPanel(): void {
         return;
       }
       const box = dom.el('div');
-      fillRows(box, 'search', hits);
+      for (const row of hits) box.append(rowElement(row, { search: true }));
       queue.append(box);
       return;
     }
@@ -456,16 +488,22 @@ function mountPanel(): void {
       queue.append(nowait);
     }
 
-    if (view.waiting.length > 0 || (view.waiting.length === 0 && view.failed.length > 0)) {
+    const sessionCount = (groups: Group[]): number =>
+      groups.reduce((total, group) => total + group.members.length, 0);
+
+    const waitingGroups = view.groups.filter((group) => isBlocked(group.state));
+    if (waitingGroups.length > 0 || view.failed.length > 0) {
       const block = dom.el('div', 'waitblock');
       block.append(sectionHead(stringsNow.section.waiting, view.waiting.length, { tone: 'warn' }));
       const list = dom.el('div');
-      const cap = expanded.waiting ? view.waiting.length : 6;
-      fillRows(list, 'waiting', view.waiting.slice(0, cap));
+      const cap = expanded.waiting ? waitingGroups.length : 6;
+      const shown = waitingGroups.slice(0, cap);
+      renderGroups(list, shown);
       block.append(list);
-      if (!expanded.waiting && view.waiting.length > 6) {
+      const hidden = sessionCount(waitingGroups.slice(cap));
+      if (!expanded.waiting && hidden > 0) {
         block.append(
-          moreLink(stringsNow.section.more(view.waiting.length - 6), () => {
+          moreLink(stringsNow.section.more(hidden), () => {
             expanded.waiting = true;
             render();
           }),
@@ -474,15 +512,17 @@ function mountPanel(): void {
       queue.append(block);
     }
 
-    if (view.failed.length > 0) {
+    const failedGroups = view.groups.filter((group) => group.state === 'failed');
+    if (failedGroups.length > 0) {
       queue.append(sectionHead(stringsNow.section.failed, view.failed.length, { tone: 'err' }));
       const list = dom.el('div');
-      const cap = expanded.failed ? view.failed.length : 3;
-      fillRows(list, 'failed', view.failed.slice(0, cap));
+      const cap = expanded.failed ? failedGroups.length : 3;
+      renderGroups(list, failedGroups.slice(0, cap));
       queue.append(list);
-      if (!expanded.failed && view.failed.length > 3) {
+      const hidden = sessionCount(failedGroups.slice(cap));
+      if (!expanded.failed && hidden > 0) {
         queue.append(
-          moreLink(stringsNow.section.more(view.failed.length - 3), () => {
+          moreLink(stringsNow.section.more(hidden), () => {
             expanded.failed = true;
             render();
           }),
@@ -490,15 +530,17 @@ function mountPanel(): void {
       }
     }
 
-    if (view.running.length > 0) {
+    const runningGroups = view.groups.filter((group) => group.state === 'running' || group.state === 'retrying');
+    if (runningGroups.length > 0) {
       queue.append(sectionHead(stringsNow.section.running, view.running.length));
       const list = dom.el('div');
-      const cap = expanded.running ? view.running.length : 5;
-      fillRows(list, 'running', view.running.slice(0, cap));
+      const cap = expanded.running ? runningGroups.length : 5;
+      renderGroups(list, runningGroups.slice(0, cap));
       queue.append(list);
-      if (!expanded.running && view.running.length > 5) {
+      const hidden = sessionCount(runningGroups.slice(cap));
+      if (!expanded.running && hidden > 0) {
         queue.append(
-          moreLink(stringsNow.section.more(view.running.length - 5), () => {
+          moreLink(stringsNow.section.more(hidden), () => {
             expanded.running = true;
             render();
           }),
@@ -522,10 +564,12 @@ function mountPanel(): void {
     }
     queue.append(endedHead);
     if (endedOpen && view.ended.length > 0) {
+      const endedGroups = view.groups.filter((group) => group.state === 'done');
       const list = dom.el('div', 'endedbox');
-      fillRows(list, 'ended', view.ended.slice(0, 8));
+      renderGroups(list, endedGroups.slice(0, 8));
       queue.append(list);
-      if (view.ended.length > 8) queue.append(dom.el('div', 'emptylist', stringsNow.section.more(view.ended.length - 8)));
+      const hidden = sessionCount(endedGroups.slice(8));
+      if (hidden > 0) queue.append(dom.el('div', 'emptylist', stringsNow.section.more(hidden)));
     }
   };
 
@@ -700,6 +744,16 @@ function mountPage(): void {
   let othersOpen = false;
   let unconnectedOpen = false;
   let phoneSeeded = false;
+  const CARD_ROW_LIMIT = 6;
+  const cardShowAll = new Set<string>();
+  const pageGroups = new Map<string, Group>();
+
+  const toggleBoardGroup = (id: string): void => {
+    const group = pageGroups.get(id);
+    if (!group) return;
+    store.toggleGroupExpanded(group);
+    render();
+  };
 
   const tabs = mountTabs(tabsSlot, {
     items: [],
@@ -854,19 +908,69 @@ function mountPage(): void {
       }
     }
 
+    pageGroups.clear();
+    for (const group of view.groups) pageGroups.set(group.head.id, group);
+
+    const tabMember = (row: Row): boolean => {
+      if (filter === 'needs') return isBlocked(row.state) || row.state === 'failed';
+      if (filter === 'running') return row.state === 'running' || row.state === 'retrying';
+      if (filter === 'ended') return row.state === 'done';
+      if (filter === 'archived') return row.state === 'archived';
+      return row.state !== 'archived';
+    };
+
+    const buildItems = (project: GuestProject): { items: dom.BoardItem[]; total: number } => {
+      const showAll = cardShowAll.has(project.id);
+      if (filter === 'archived') {
+        const rows = sortForBoard((byProject.get(project.id) ?? []));
+        const items = rows.map((row) => ({ row, child: row.child } as dom.BoardItem));
+        return { items: showAll ? items : items.slice(0, CARD_ROW_LIMIT), total: items.length };
+      }
+      const items: dom.BoardItem[] = [];
+      let total = 0;
+      for (const group of view.groups) {
+        if (group.head.projectId !== project.id) continue;
+        const headMatches = tabMember(group.head) && matchesQuery(group.head);
+        const children = group.children.filter((row) => tabMember(row) && matchesQuery(row));
+        if (!headMatches && children.length === 0) continue;
+        const expanded = showAll || store.isGroupExpanded(group);
+        items.push({
+          row: group.head,
+          child: false,
+          group,
+          expanded,
+          collapsible: group.children.length > 0 && group.blocked.length === 0,
+        });
+        total += 1;
+        if (expanded) {
+          for (const child of children) {
+            items.push({ row: child, child: true });
+            total += 1;
+          }
+        } else {
+          total += children.length;
+        }
+      }
+      return { items: showAll ? items : items.slice(0, CARD_ROW_LIMIT), total };
+    };
+
     board.textContent = '';
     for (const project of cards) {
-      const projectRows = byProject.get(project.id) ?? [];
+      const built = buildItems(project);
+      const showAll = cardShowAll.has(project.id);
       board.append(
         dom.createProjectCard({
           project,
-          rows: sortForBoard(projectRows),
+          items: built.items,
           counts: {
             ...countsFor(project.id),
             archived: filter === 'archived' ? 0 : countsFor(project.id).archived,
           },
           collapsed: store.getCollapsed().projects.includes(project.id),
           error: view.errorProjects.includes(project.name),
+          hiddenRows: Math.max(0, built.total - built.items.length),
+          showAll,
+          onToggleGroup: toggleBoardGroup,
         }),
       );
     }
@@ -1060,6 +1164,15 @@ function mountPage(): void {
 
   board.addEventListener('click', (event) => {
     const target = event.target as HTMLElement;
+    if (target.closest('.b-twist')) return;
+    const cardMore = target.closest<HTMLElement>('[data-card-more]');
+    if (cardMore?.dataset.cardMore) {
+      const id = cardMore.dataset.cardMore;
+      if (cardShowAll.has(id)) cardShowAll.delete(id);
+      else cardShowAll.add(id);
+      render();
+      return;
+    }
     const cardHead = target.closest<HTMLElement>('[data-card]');
     if (cardHead?.dataset.card) {
       toggleCollapsed(store, cardHead.dataset.card);

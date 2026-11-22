@@ -2369,6 +2369,8 @@ ${GUEST_UI_LOOK_CSS}`;
         empty: "\u6CA1\u6709\u5339\u914D\u7684\u4F1A\u8BDD"
       },
       more: "\u66F4\u591A\u64CD\u4F5C",
+      expandGroup: "\u5C55\u5F00\u5B50\u4F1A\u8BDD",
+      collapseGroup: "\u6536\u8D77\u5B50\u4F1A\u8BDD",
       clearWaiting: "\u6CA1\u6709\u4F1A\u8BDD\u5728\u7B49\u4F60",
       goodNews: {
         title: "\u6CA1\u6709\u4F1A\u8BDD\u9700\u8981\u4F60",
@@ -2427,6 +2429,8 @@ ${GUEST_UI_LOOK_CSS}`;
       chip: { blocked: (n) => `\u7B49\u4F60 ${n}`, failed: (n) => `\u5931\u8D25 ${n}`, running: (n) => `\u8FD0\u884C ${n}` },
       archivedLink: (n) => `\u5DF2\u5F52\u6863 ${n}`,
       moreSessions: (n) => `\u8FD8\u6709 ${n} \u4E2A\u4F1A\u8BDD`,
+      moreRows: (n) => `\u8FD8\u6709 ${n} \u4E2A`,
+      showAll: "\u663E\u793A\u5168\u90E8",
       fewerSessions: "\u6536\u8D77"
     },
     action: {
@@ -2516,6 +2520,8 @@ ${GUEST_UI_LOOK_CSS}`;
         empty: "No matching sessions"
       },
       more: "More actions",
+      expandGroup: "Expand sub-sessions",
+      collapseGroup: "Collapse sub-sessions",
       clearWaiting: "Nothing is waiting on you",
       goodNews: {
         title: "Nothing needs you",
@@ -2574,6 +2580,8 @@ ${GUEST_UI_LOOK_CSS}`;
       chip: { blocked: (n) => `${n} waiting`, failed: (n) => `${n} failed`, running: (n) => `${n} running` },
       archivedLink: (n) => `${n} archived`,
       moreSessions: (n) => `${n} more sessions`,
+      moreRows: (n) => `${n} more`,
+      showAll: "Show all",
       fewerSessions: "Show fewer"
     },
     action: {
@@ -2680,25 +2688,6 @@ ${GUEST_UI_LOOK_CSS}`;
   var setText2 = (node, text) => {
     if (node.textContent !== text) node.textContent = text;
   };
-  function reconcile(container, items, keyOf, create, cache) {
-    const next = /* @__PURE__ */ new Map();
-    for (const item of items) {
-      let key = keyOf(item);
-      for (let copy = 1; next.has(key); copy += 1) key = `${keyOf(item)}${copy}`;
-      const reused = cache.get(key);
-      if (reused) reused.update(item);
-      next.set(key, reused ?? create(item));
-    }
-    for (const [key, entry] of cache) if (next.get(key) !== entry) entry.element.remove();
-    cache.clear();
-    let index = 0;
-    for (const [key, entry] of next) {
-      cache.set(key, entry);
-      const current2 = container.children[index] ?? null;
-      if (current2 !== entry.element) container.insertBefore(entry.element, current2);
-      index += 1;
-    }
-  }
   var svg = (size, body, stroke = false) => {
     const node = document.createElementNS("http://www.w3.org/2000/svg", "svg");
     node.setAttribute("width", String(size));
@@ -2747,9 +2736,9 @@ ${GUEST_UI_LOOK_CSS}`;
     else delete node.dataset.age;
     setText2(node, metaText(row));
   };
-  function createPanelRow(row, freshIds, onFreshPaint) {
+  function createPanelRow(row, freshIds, onFreshPaint, opts = {}) {
     const strings = t();
-    const element = el2("div", "cr-row");
+    const element = el2("div", opts.child ? "cr-row cr-child" : "cr-row");
     element.setAttribute("role", "button");
     element.tabIndex = 0;
     const dot = el2("span", "cr-dot");
@@ -2765,12 +2754,27 @@ ${GUEST_UI_LOOK_CSS}`;
     more.tabIndex = 0;
     more.append(dotsIcon());
     element.append(dot, main, metaWrap, more);
+    let twist = null;
+    if (opts.group) {
+      element.dataset.group = "true";
+      twist = el2("button", "cr-twist");
+      twist.type = "button";
+      twist.append(el2("i", "tri"));
+      twist.addEventListener("click", (event) => {
+        event.stopPropagation();
+        opts.onToggle?.(row.id);
+      });
+      twist.addEventListener("keydown", (event) => event.stopPropagation());
+      element.append(twist);
+    }
     const paint = (item) => {
       element.dataset.id = item.id;
       element.dataset.state = item.state;
       element.title = item.title;
       dot.dataset.state = item.state;
-      setText2(title, item.title);
+      title.textContent = "";
+      if (opts.search && item.child) title.append(el2("span", "child-mark", "\u21B3"));
+      title.append(document.createTextNode(item.title));
       const blocked = item.state === "permission" || item.state === "question";
       sub.textContent = "";
       if (blocked || item.state === "failed") {
@@ -2790,21 +2794,40 @@ ${GUEST_UI_LOOK_CSS}`;
       const waited = blocked ? formatDuration(item.waitedMs) : null;
       element.setAttribute("aria-label", strings.aria.row(item.title, strings.state[item.state], item.projectName, waited));
       more.setAttribute("aria-label", strings.panel.more);
+      if (twist) {
+        twist.setAttribute("aria-expanded", opts.expanded ? "true" : "false");
+        twist.setAttribute("aria-label", opts.expanded ? strings.panel.collapseGroup : strings.panel.expandGroup);
+        twist.title = opts.expanded ? strings.panel.collapseGroup : strings.panel.expandGroup;
+      }
       if (freshIds.has(item.id)) onFreshPaint(item.id, element);
     };
     paint(row);
     return { element, update: paint };
   }
-  function createBoardRow(row) {
+  function createBoardRow(row, opts = {}) {
     const strings = t();
-    const element = el2("div", "brow");
+    const element = el2("div", opts.child ? "brow bchild" : "brow");
     element.setAttribute("role", "button");
     element.tabIndex = 0;
+    if (opts.group) element.dataset.group = "true";
     const dot = el2("span", "bdot");
     dot.setAttribute("aria-hidden", "true");
     const title = el2("span", "btitle");
     const meta = el2("span", "bmeta");
-    element.append(dot, title, meta);
+    element.append(dot, title);
+    let twist = null;
+    if (opts.group) {
+      twist = el2("button", "b-twist");
+      twist.type = "button";
+      twist.append(el2("i", "tri"));
+      twist.addEventListener("click", (event) => {
+        event.stopPropagation();
+        opts.onToggle?.(row.id);
+      });
+      twist.addEventListener("keydown", (event) => event.stopPropagation());
+      element.append(twist);
+    }
+    element.append(meta);
     const paint = (item) => {
       element.dataset.id = item.id;
       element.dataset.state = item.state;
@@ -2813,7 +2836,6 @@ ${GUEST_UI_LOOK_CSS}`;
       element.title = item.title;
       dot.dataset.state = item.state;
       title.textContent = "";
-      if (item.child) title.append(el2("span", "child-mark", "\u21B3"));
       title.append(document.createTextNode(item.title));
       if (item.worktree) title.append(document.createTextNode(" "), el2("i", "wt", strings.misc.wt));
       const blocked = item.state === "permission" || item.state === "question";
@@ -2821,6 +2843,11 @@ ${GUEST_UI_LOOK_CSS}`;
       setText2(meta, metaText(item));
       const waited = blocked ? formatDuration(item.waitedMs) : null;
       element.setAttribute("aria-label", strings.aria.row(item.title, strings.state[item.state], item.projectName, waited));
+      if (twist) {
+        twist.setAttribute("aria-expanded", opts.expanded ? "true" : "false");
+        twist.setAttribute("aria-label", opts.expanded ? strings.panel.collapseGroup : strings.panel.expandGroup);
+        twist.title = opts.expanded ? strings.panel.collapseGroup : strings.panel.expandGroup;
+      }
     };
     paint(row);
     return { element, update: paint };
@@ -2887,21 +2914,50 @@ ${GUEST_UI_LOOK_CSS}`;
       retry.dataset.retry = project.id;
       error.append(retry);
       body.append(error);
-    } else if (input.rows.length === 0) {
+    } else if (input.items.length === 0) {
       body.append(el2("div", "project-error", strings.board.projectEmpty));
     } else {
-      for (const row of input.rows) body.append(createBoardRow(row).element);
+      let childrenRail = null;
+      for (const item of input.items) {
+        if (item.group) {
+          childrenRail = null;
+          body.append(
+            createBoardRow(item.row, {
+              group: item.collapsible,
+              expanded: item.expanded,
+              onToggle: input.onToggleGroup
+            }).element
+          );
+        } else if (item.child) {
+          if (!childrenRail) {
+            childrenRail = el2("div", "bchildren");
+            body.append(childrenRail);
+          }
+          childrenRail.append(createBoardRow(item.row, { child: true }).element);
+        } else {
+          childrenRail = null;
+          body.append(createBoardRow(item.row).element);
+        }
+      }
     }
     section.append(body);
-    if (input.counts.archived && input.rows.length > 0) {
-      const foot = el2("div", "pcfoot");
-      foot.append(el2("span", "grow"));
+    const foot = el2("div", "pcfoot");
+    foot.append(el2("span", "grow"));
+    if (!input.error && (input.hiddenRows > 0 || input.showAll)) {
+      const more = el2("button", "link");
+      more.type = "button";
+      more.dataset.cardMore = project.id;
+      more.textContent = input.showAll ? strings.board.fewerSessions : `${strings.board.moreRows(input.hiddenRows)} \xB7 ${strings.board.showAll}`;
+      foot.append(more);
+    }
+    if (input.counts.archived && input.items.length > 0) {
       const link = el2("button", "link", strings.board.archivedLink(input.counts.archived));
       link.type = "button";
       link.dataset.archivedLink = project.id;
+      if (foot.childElementCount > 1) foot.append(el2("span", "sep-dot", strings.sep));
       foot.append(link);
-      section.append(foot);
     }
+    if (foot.childElementCount > 1) section.append(foot);
     return section;
   }
   function createRowMenu(actions, onPick) {
@@ -3071,7 +3127,7 @@ ${GUEST_UI_LOOK_CSS}`;
     currentBlocked = [];
     started = false;
     disposed = false;
-    collapsed = { ended: false, projects: [] };
+    collapsed = { ended: false, projects: [], groups: [] };
     board = { tab: "all", query: "" };
     changeHandler = null;
     onChange(handler) {
@@ -3101,7 +3157,8 @@ ${GUEST_UI_LOOK_CSS}`;
         const value = collapsed.value;
         this.collapsed = {
           ended: value.ended === true,
-          projects: stringList(value.projects).slice(0, 400)
+          projects: stringList(value.projects).slice(0, 400),
+          groups: stringList(value.groups).slice(0, 200)
         };
       }
       if (board.status === "fulfilled" && isRecord(board.value)) {
@@ -3117,6 +3174,18 @@ ${GUEST_UI_LOOK_CSS}`;
     }
     setEndedCollapsed(ended) {
       this.collapsed.ended = ended;
+      this.write(COLLAPSED_KEY, this.collapsed);
+    }
+    /** Blocked groups are always open; everything else opens only when listed. */
+    isGroupExpanded(group) {
+      return group.blocked.length > 0 || this.collapsed.groups.includes(group.head.id);
+    }
+    toggleGroupExpanded(group) {
+      if (group.blocked.length > 0) return;
+      const set = new Set(this.collapsed.groups);
+      if (set.has(group.head.id)) set.delete(group.head.id);
+      else set.add(group.head.id);
+      this.collapsed.groups = [...set].slice(0, 200);
       this.write(COLLAPSED_KEY, this.collapsed);
     }
     toggleProjectCollapsed(projectId) {
@@ -3402,13 +3471,60 @@ ${GUEST_UI_LOOK_CSS}`;
       if (this.entries.size > 0 && [...this.entries.values()].every((entry) => entry.state !== "loading")) {
         this.initialComplete = true;
       }
-      const queue = raw.filter((row) => !row.child && row.state !== "archived");
-      const waiting = sortWaiting(queue.filter((row) => isBlockedState(row.state)));
-      const failed = sortFailed(queue.filter((row) => row.state === "failed"));
-      const running = sortRunning(queue.filter((row) => row.state === "running" || row.state === "retrying"));
-      const ended = sortEnded(queue.filter((row) => row.state === "done"));
-      const idle = sortEnded(queue.filter((row) => row.state === "idle" || row.state === "unknown"));
+      const activeRows = raw.filter((row) => row.state !== "archived");
       const archived = sortEnded(raw.filter((row) => row.state === "archived"));
+      const waiting = sortWaiting(activeRows.filter((row) => isBlockedState(row.state)));
+      const childrenByParent = /* @__PURE__ */ new Map();
+      for (const row of activeRows) {
+        if (!row.child || !row.parentId) continue;
+        const list = childrenByParent.get(row.parentId);
+        if (list) list.push(row);
+        else childrenByParent.set(row.parentId, [row]);
+      }
+      const sortMembers = (rows) => [
+        ...sortWaiting(rows.filter((row) => isBlockedState(row.state))),
+        ...sortFailed(rows.filter((row) => row.state === "failed")),
+        ...sortRunning(rows.filter((row) => row.state === "running" || row.state === "retrying")),
+        ...sortEnded(rows.filter((row) => row.state === "done")),
+        ...sortEnded(rows.filter((row) => row.state === "idle" || row.state === "unknown"))
+      ];
+      const groups = [];
+      for (const head of activeRows) {
+        if (head.child) continue;
+        const children = sortMembers(childrenByParent.get(head.id) ?? []);
+        const members = [head, ...children];
+        const blocked = members.filter((row) => isBlockedState(row.state));
+        const state = blocked.length > 0 ? blocked.some((row) => row.state === "permission") ? "permission" : "question" : head.state;
+        groups.push({ head, children, members, state, blocked });
+      }
+      const groupRank = (group) => group.state === "permission" ? 0 : group.state === "question" ? 1 : group.state === "failed" ? 2 : group.state === "retrying" || group.state === "running" ? 3 : group.state === "done" ? 4 : 5;
+      const oldestBlock = (group) => Math.min(...group.blocked.map((row) => row.updatedAt));
+      const newestMember = (group) => Math.max(...group.members.map((row) => row.updatedAt));
+      groups.sort((a, b) => {
+        const rankA = groupRank(a);
+        const rankB = groupRank(b);
+        if (rankA !== rankB) return rankA - rankB;
+        if (rankA <= 1) return oldestBlock(a) - oldestBlock(b) || a.head.id.localeCompare(b.head.id);
+        if (rankA === 2) return newestMember(b) - newestMember(a) || a.head.id.localeCompare(b.head.id);
+        if (rankA === 3) {
+          const runningA = a.state === "retrying" ? 0 : 1;
+          const runningB = b.state === "retrying" ? 0 : 1;
+          return runningA - runningB || b.head.updatedAt - a.head.updatedAt || a.head.id.localeCompare(b.head.id);
+        }
+        return b.head.updatedAt - a.head.updatedAt || a.head.id.localeCompare(b.head.id);
+      });
+      const headsIn = (...states) => groups.filter((group) => states.includes(group.state)).map((group) => group.head);
+      const failed = headsIn("failed");
+      const running = headsIn("running", "retrying");
+      const ended = headsIn("done");
+      const idle = headsIn("idle");
+      const flatRows = [
+        ...waiting,
+        ...sortFailed(activeRows.filter((row) => row.state === "failed")),
+        ...sortRunning(activeRows.filter((row) => row.state === "running" || row.state === "retrying")),
+        ...sortEnded(activeRows.filter((row) => row.state === "done")),
+        ...sortEnded(activeRows.filter((row) => row.state === "idle" || row.state === "unknown"))
+      ];
       this.currentBlocked = waiting.map((row) => row.id);
       const connectedIds = /* @__PURE__ */ new Set([...this.subs.keys()]);
       for (const project of this.projects) {
@@ -3433,7 +3549,7 @@ ${GUEST_UI_LOOK_CSS}`;
       const view = {
         phase: this.fatal ? "error" : this.projectsState,
         hasData: this.lastReadyAt > 0,
-        sessionsLoaded: this.entries.size > 0 && [...this.entries.values()].every((entry) => entry.state !== "loading"),
+        sessionsLoaded: this.projects.length === 0 || this.entries.size > 0 && [...this.entries.values()].every((entry) => entry.state !== "loading"),
         fatal: this.fatal,
         rows: raw,
         waiting,
@@ -3442,6 +3558,8 @@ ${GUEST_UI_LOOK_CSS}`;
         ended,
         idle,
         archived,
+        groups,
+        flatRows,
         counts,
         connected,
         unconnected,
@@ -3687,6 +3805,21 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 .cr-row:hover .cr-meta, .cr-row:focus-within .cr-meta { opacity: 0; }
 .cr-more:hover, .cr-more:focus-visible { background: var(--oc-active); color: var(--oc-fg); }
 
+/* group header: the official twist, on the row's trailing edge */
+.cr-row[data-group="true"] .cr-meta { padding-right: 26px; }
+.cr-row[data-group="true"] .cr-more { right: 29px; }
+.cr-twist {
+  position: absolute; right: 2px; top: 50%; transform: translateY(-50%);
+  width: 24px; height: 24px; border-radius: 4px; display: grid; place-items: center;
+  color: var(--oc-muted);
+}
+.cr-twist:hover, .cr-twist:focus-visible { background: var(--oc-active); color: var(--oc-fg); }
+.cr-twist .tri { border-left-width: 4px; border-top-width: 3.5px; border-bottom-width: 3.5px; }
+
+/* child rows: indented, behind the official 2px group rail */
+.cr-children { margin: 0 0 0 10px; padding-left: 8px; border-left: 2px solid color-mix(in srgb, var(--oc-fg) 40%, transparent); }
+.cr-child { padding-left: 4px; }
+
 .endedbox { padding-bottom: 2px; }
 
 .pfoot {
@@ -3701,7 +3834,7 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 /* good news: one quiet ring, two lines */
 .goodnews { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 5px; padding: 18px 14px 12px; }
 .goodnews h4 { margin: 0; font-size: 12px; font-weight: 600; }
-.goodnews p { margin: 0; font-size: 11px; color: var(--oc-muted); line-height: 1.6; max-width: 30ch; }
+.goodnews p { margin: 0; font-size: 11px; color: var(--oc-muted); line-height: 1.6; max-width: none; }
 .goodnews .endedline { font-size: 10.5px; color: var(--oc-muted); margin-top: 2px; font-family: var(--oc-mono); }
 
 .banner-slot { padding: 0 12px 8px; }
@@ -3821,10 +3954,13 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 .pcard[data-collapsed="true"] .pcardbody, .pcard[data-collapsed="true"] .pcfoot { display: none; }
 
 .brow {
-  display: grid; grid-template-columns: 11px minmax(0, 1fr) auto;
+  display: grid; grid-template-columns: 11px minmax(0, 1fr) auto auto;
   column-gap: 6px; align-items: center; height: 28px; padding: 0 4px; border-radius: 4px;
   cursor: pointer;
 }
+.b-twist { width: 24px; height: 24px; border-radius: 4px; display: grid; place-items: center; color: var(--oc-muted); }
+.b-twist:hover, .b-twist:focus-visible { background: var(--oc-active); color: var(--oc-fg); }
+.bchildren { margin-left: 12px; padding-left: 6px; border-left: 2px solid color-mix(in srgb, var(--oc-fg) 40%, transparent); }
 .brow:hover, .brow:focus-visible { background: var(--oc-hover); }
 .bdot { width: 6px; height: 6px; }
 .bdot[data-state="permission"], .bdot[data-state="question"] { background: var(--oc-warning); }
@@ -3853,6 +3989,7 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 .pcfoot { display: flex; align-items: center; gap: 6px; padding: 3px 4px 6px; font-size: 10px; color: var(--oc-muted); }
 .pcfoot .link { color: var(--oc-muted); font-size: 10px; }
 .pcfoot .link:hover, .pcfoot .link:focus-visible { color: var(--oc-fg); }
+.pcfoot .sep-dot { opacity: .5; }
 .pcfoot .grow { flex: 1; }
 .pcard .project-error { padding: 6px 4px 8px; font-size: 11px; color: var(--oc-muted); }
 .pcard .project-error button { color: var(--oc-warning-text); font-size: 11px; }
@@ -4182,8 +4319,35 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
       button2.addEventListener("click", onClick);
       return button2;
     };
-    const fillRows = (container, key, rows) => {
-      reconcile(container, rows, (row) => row.id, (row) => createPanelRow(row, freshIds, onFresh), cacheFor(key));
+    const groupsById = /* @__PURE__ */ new Map();
+    const toggleGroup = (id) => {
+      const group = groupsById.get(id);
+      if (!group) return;
+      store.toggleGroupExpanded(group);
+      render();
+    };
+    const rowElement = (row, opts = {}) => {
+      const key = `${row.id}|${opts.group ? "g" : ""}${opts.child ? "c" : ""}${opts.search ? "s" : ""}|${opts.expanded ? 1 : 0}`;
+      let entry = cacheFor("rows").get(key);
+      if (!entry) {
+        entry = createPanelRow(row, freshIds, onFresh, { ...opts, onToggle: toggleGroup });
+        cacheFor("rows").set(key, entry);
+      } else {
+        entry.update(row);
+      }
+      return entry.element;
+    };
+    const renderGroups = (container, groups) => {
+      for (const group of groups) {
+        const expanded2 = store.isGroupExpanded(group);
+        const collapsible = group.children.length > 0 && group.blocked.length === 0;
+        container.append(rowElement(group.head, { group: collapsible, expanded: expanded2 }));
+        if (expanded2 && group.children.length > 0) {
+          const rail = el2("div", "cr-children");
+          for (const child of group.children) rail.append(rowElement(child, { child: true }));
+          container.append(rail);
+        }
+      }
     };
     const showEmpty = (key, titleText, body, action) => {
       emptySlot.hidden = false;
@@ -4265,7 +4429,7 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
     };
     const searchHits = (view) => {
       const needle = query.trim().toLowerCase();
-      return [...view.waiting, ...view.failed, ...view.running, ...view.ended, ...view.idle].filter(
+      return view.flatRows.filter(
         (row) => `${row.title} ${row.projectName} ${row.branch ?? ""}`.toLowerCase().includes(needle)
       );
     };
@@ -4274,6 +4438,8 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
       queue.textContent = "";
       rowById.clear();
       for (const row of view.rows) rowById.set(row.id, row);
+      groupsById.clear();
+      for (const group of view.groups) groupsById.set(group.head.id, group);
       freshIds.clear();
       for (const id of view.fresh) freshIds.add(id);
       if (query.trim()) {
@@ -4283,7 +4449,7 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
           return;
         }
         const box = el2("div");
-        fillRows(box, "search", hits);
+        for (const row of hits) box.append(rowElement(row, { search: true }));
         queue.append(box);
         return;
       }
@@ -4306,16 +4472,20 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
         nowait.append(tick, el2("span", "", stringsNow.panel.clearWaiting));
         queue.append(nowait);
       }
-      if (view.waiting.length > 0 || view.waiting.length === 0 && view.failed.length > 0) {
+      const sessionCount = (groups) => groups.reduce((total, group) => total + group.members.length, 0);
+      const waitingGroups = view.groups.filter((group) => isBlocked(group.state));
+      if (waitingGroups.length > 0 || view.failed.length > 0) {
         const block = el2("div", "waitblock");
         block.append(sectionHead(stringsNow.section.waiting, view.waiting.length, { tone: "warn" }));
         const list = el2("div");
-        const cap = expanded.waiting ? view.waiting.length : 6;
-        fillRows(list, "waiting", view.waiting.slice(0, cap));
+        const cap = expanded.waiting ? waitingGroups.length : 6;
+        const shown = waitingGroups.slice(0, cap);
+        renderGroups(list, shown);
         block.append(list);
-        if (!expanded.waiting && view.waiting.length > 6) {
+        const hidden = sessionCount(waitingGroups.slice(cap));
+        if (!expanded.waiting && hidden > 0) {
           block.append(
-            moreLink(stringsNow.section.more(view.waiting.length - 6), () => {
+            moreLink(stringsNow.section.more(hidden), () => {
               expanded.waiting = true;
               render();
             })
@@ -4323,30 +4493,34 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
         }
         queue.append(block);
       }
-      if (view.failed.length > 0) {
+      const failedGroups = view.groups.filter((group) => group.state === "failed");
+      if (failedGroups.length > 0) {
         queue.append(sectionHead(stringsNow.section.failed, view.failed.length, { tone: "err" }));
         const list = el2("div");
-        const cap = expanded.failed ? view.failed.length : 3;
-        fillRows(list, "failed", view.failed.slice(0, cap));
+        const cap = expanded.failed ? failedGroups.length : 3;
+        renderGroups(list, failedGroups.slice(0, cap));
         queue.append(list);
-        if (!expanded.failed && view.failed.length > 3) {
+        const hidden = sessionCount(failedGroups.slice(cap));
+        if (!expanded.failed && hidden > 0) {
           queue.append(
-            moreLink(stringsNow.section.more(view.failed.length - 3), () => {
+            moreLink(stringsNow.section.more(hidden), () => {
               expanded.failed = true;
               render();
             })
           );
         }
       }
-      if (view.running.length > 0) {
+      const runningGroups = view.groups.filter((group) => group.state === "running" || group.state === "retrying");
+      if (runningGroups.length > 0) {
         queue.append(sectionHead(stringsNow.section.running, view.running.length));
         const list = el2("div");
-        const cap = expanded.running ? view.running.length : 5;
-        fillRows(list, "running", view.running.slice(0, cap));
+        const cap = expanded.running ? runningGroups.length : 5;
+        renderGroups(list, runningGroups.slice(0, cap));
         queue.append(list);
-        if (!expanded.running && view.running.length > 5) {
+        const hidden = sessionCount(runningGroups.slice(cap));
+        if (!expanded.running && hidden > 0) {
           queue.append(
-            moreLink(stringsNow.section.more(view.running.length - 5), () => {
+            moreLink(stringsNow.section.more(hidden), () => {
               expanded.running = true;
               render();
             })
@@ -4369,10 +4543,12 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
       }
       queue.append(endedHead);
       if (endedOpen && view.ended.length > 0) {
+        const endedGroups = view.groups.filter((group) => group.state === "done");
         const list = el2("div", "endedbox");
-        fillRows(list, "ended", view.ended.slice(0, 8));
+        renderGroups(list, endedGroups.slice(0, 8));
         queue.append(list);
-        if (view.ended.length > 8) queue.append(el2("div", "emptylist", stringsNow.section.more(view.ended.length - 8)));
+        const hidden = sessionCount(endedGroups.slice(8));
+        if (hidden > 0) queue.append(el2("div", "emptylist", stringsNow.section.more(hidden)));
       }
     };
     const renderFoot = (view) => {
@@ -4514,6 +4690,15 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
     let othersOpen = false;
     let unconnectedOpen = false;
     let phoneSeeded = false;
+    const CARD_ROW_LIMIT = 6;
+    const cardShowAll = /* @__PURE__ */ new Set();
+    const pageGroups = /* @__PURE__ */ new Map();
+    const toggleBoardGroup = (id) => {
+      const group = pageGroups.get(id);
+      if (!group) return;
+      store.toggleGroupExpanded(group);
+      render();
+    };
     const tabs = mountTabs(tabsSlot, {
       items: [],
       activeId: filter,
@@ -4651,19 +4836,66 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
           }
         }
       }
+      pageGroups.clear();
+      for (const group of view.groups) pageGroups.set(group.head.id, group);
+      const tabMember = (row) => {
+        if (filter === "needs") return isBlocked(row.state) || row.state === "failed";
+        if (filter === "running") return row.state === "running" || row.state === "retrying";
+        if (filter === "ended") return row.state === "done";
+        if (filter === "archived") return row.state === "archived";
+        return row.state !== "archived";
+      };
+      const buildItems = (project) => {
+        const showAll = cardShowAll.has(project.id);
+        if (filter === "archived") {
+          const rows2 = sortForBoard(byProject.get(project.id) ?? []);
+          const items2 = rows2.map((row) => ({ row, child: row.child }));
+          return { items: showAll ? items2 : items2.slice(0, CARD_ROW_LIMIT), total: items2.length };
+        }
+        const items = [];
+        let total = 0;
+        for (const group of view.groups) {
+          if (group.head.projectId !== project.id) continue;
+          const headMatches = tabMember(group.head) && matchesQuery(group.head);
+          const children = group.children.filter((row) => tabMember(row) && matchesQuery(row));
+          if (!headMatches && children.length === 0) continue;
+          const expanded = showAll || store.isGroupExpanded(group);
+          items.push({
+            row: group.head,
+            child: false,
+            group,
+            expanded,
+            collapsible: group.children.length > 0 && group.blocked.length === 0
+          });
+          total += 1;
+          if (expanded) {
+            for (const child of children) {
+              items.push({ row: child, child: true });
+              total += 1;
+            }
+          } else {
+            total += children.length;
+          }
+        }
+        return { items: showAll ? items : items.slice(0, CARD_ROW_LIMIT), total };
+      };
       board.textContent = "";
       for (const project of cards) {
-        const projectRows = byProject.get(project.id) ?? [];
+        const built = buildItems(project);
+        const showAll = cardShowAll.has(project.id);
         board.append(
           createProjectCard({
             project,
-            rows: sortForBoard(projectRows),
+            items: built.items,
             counts: {
               ...countsFor(project.id),
               archived: filter === "archived" ? 0 : countsFor(project.id).archived
             },
             collapsed: store.getCollapsed().projects.includes(project.id),
-            error: view.errorProjects.includes(project.name)
+            error: view.errorProjects.includes(project.name),
+            hiddenRows: Math.max(0, built.total - built.items.length),
+            showAll,
+            onToggleGroup: toggleBoardGroup
           })
         );
       }
@@ -4837,6 +5069,15 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
     startClock(() => refreshTimes(root, store));
     board.addEventListener("click", (event) => {
       const target = event.target;
+      if (target.closest(".b-twist")) return;
+      const cardMore = target.closest("[data-card-more]");
+      if (cardMore?.dataset.cardMore) {
+        const id = cardMore.dataset.cardMore;
+        if (cardShowAll.has(id)) cardShowAll.delete(id);
+        else cardShowAll.add(id);
+        render();
+        return;
+      }
       const cardHead = target.closest("[data-card]");
       if (cardHead?.dataset.card) {
         toggleCollapsed(store, cardHead.dataset.card);

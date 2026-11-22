@@ -1,7 +1,7 @@
 // DOM builders. No UI text here: every label comes from strings.ts.
 import type { GuestProject } from '@openchamber/sdk';
 import { mountSpinner } from '@openchamber/sdk/ui';
-import type { Row, StateName, View } from './store';
+import type { Group, Row, StateName, View } from './store';
 import { formatClock, formatDuration, formatWait, metaFor, t } from './strings';
 
 export const el = <K extends keyof HTMLElementTagNameMap>(
@@ -117,9 +117,24 @@ const paintMeta = (node: HTMLElement, row: Row): void => {
 
 export type RowKeyed = Keyed<Row>;
 
-export function createPanelRow(row: Row, freshIds: Set<string>, onFreshPaint: (id: string, node: HTMLElement) => void): RowKeyed {
+export type GroupRowOpts = {
+  /** Has child rows: draws the collapse twist. */
+  group?: boolean;
+  expanded?: boolean;
+  child?: boolean;
+  /** Flat search results keep the ↳ mark. */
+  search?: boolean;
+  onToggle?: (id: string) => void;
+};
+
+export function createPanelRow(
+  row: Row,
+  freshIds: Set<string>,
+  onFreshPaint: (id: string, node: HTMLElement) => void,
+  opts: GroupRowOpts = {},
+): RowKeyed {
   const strings = t();
-  const element = el('div', 'cr-row');
+  const element = el('div', opts.child ? 'cr-row cr-child' : 'cr-row');
   element.setAttribute('role', 'button');
   element.tabIndex = 0;
   const dot = el('span', 'cr-dot');
@@ -136,12 +151,28 @@ export function createPanelRow(row: Row, freshIds: Set<string>, onFreshPaint: (i
   more.append(dotsIcon());
   element.append(dot, main, metaWrap, more);
 
+  let twist: HTMLButtonElement | null = null;
+  if (opts.group) {
+    element.dataset.group = 'true';
+    twist = el('button', 'cr-twist');
+    twist.type = 'button';
+    twist.append(el('i', 'tri'));
+    twist.addEventListener('click', (event) => {
+      event.stopPropagation();
+      opts.onToggle?.(row.id);
+    });
+    twist.addEventListener('keydown', (event) => event.stopPropagation());
+    element.append(twist);
+  }
+
   const paint = (item: Row): void => {
     element.dataset.id = item.id;
     element.dataset.state = item.state;
     element.title = item.title;
     dot.dataset.state = item.state;
-    setText(title, item.title);
+    title.textContent = '';
+    if (opts.search && item.child) title.append(el('span', 'child-mark', '↳'));
+    title.append(document.createTextNode(item.title));
     const blocked = item.state === 'permission' || item.state === 'question';
     sub.textContent = '';
     if (blocked || item.state === 'failed') {
@@ -161,22 +192,43 @@ export function createPanelRow(row: Row, freshIds: Set<string>, onFreshPaint: (i
     const waited = blocked ? formatDuration(item.waitedMs) : null;
     element.setAttribute('aria-label', strings.aria.row(item.title, strings.state[item.state], item.projectName, waited));
     more.setAttribute('aria-label', strings.panel.more);
+    if (twist) {
+      twist.setAttribute('aria-expanded', opts.expanded ? 'true' : 'false');
+      twist.setAttribute('aria-label', opts.expanded ? strings.panel.collapseGroup : strings.panel.expandGroup);
+      twist.title = opts.expanded ? strings.panel.collapseGroup : strings.panel.expandGroup;
+    }
     if (freshIds.has(item.id)) onFreshPaint(item.id, element);
   };
   paint(row);
   return { element, update: paint };
 }
 
-export function createBoardRow(row: Row): RowKeyed {
+export function createBoardRow(row: Row, opts: GroupRowOpts = {}): RowKeyed {
   const strings = t();
-  const element = el('div', 'brow');
+  const element = el('div', opts.child ? 'brow bchild' : 'brow');
   element.setAttribute('role', 'button');
   element.tabIndex = 0;
+  if (opts.group) element.dataset.group = 'true';
   const dot = el('span', 'bdot');
   dot.setAttribute('aria-hidden', 'true');
   const title = el('span', 'btitle');
   const meta = el('span', 'bmeta');
-  element.append(dot, title, meta);
+  element.append(dot, title);
+
+  let twist: HTMLButtonElement | null = null;
+  if (opts.group) {
+    twist = el('button', 'b-twist');
+    twist.type = 'button';
+    twist.append(el('i', 'tri'));
+    twist.addEventListener('click', (event) => {
+      event.stopPropagation();
+      opts.onToggle?.(row.id);
+    });
+    twist.addEventListener('keydown', (event) => event.stopPropagation());
+    element.append(twist);
+  }
+  element.append(meta);
+
   const paint = (item: Row): void => {
     element.dataset.id = item.id;
     element.dataset.state = item.state;
@@ -185,7 +237,6 @@ export function createBoardRow(row: Row): RowKeyed {
     element.title = item.title;
     dot.dataset.state = item.state;
     title.textContent = '';
-    if (item.child) title.append(el('span', 'child-mark', '↳'));
     title.append(document.createTextNode(item.title));
     if (item.worktree) title.append(document.createTextNode(' '), el('i', 'wt', strings.misc.wt));
     const blocked = item.state === 'permission' || item.state === 'question';
@@ -193,6 +244,11 @@ export function createBoardRow(row: Row): RowKeyed {
     setText(meta, metaText(item));
     const waited = blocked ? formatDuration(item.waitedMs) : null;
     element.setAttribute('aria-label', strings.aria.row(item.title, strings.state[item.state], item.projectName, waited));
+    if (twist) {
+      twist.setAttribute('aria-expanded', opts.expanded ? 'true' : 'false');
+      twist.setAttribute('aria-label', opts.expanded ? strings.panel.collapseGroup : strings.panel.expandGroup);
+      twist.title = opts.expanded ? strings.panel.collapseGroup : strings.panel.expandGroup;
+    }
   };
   paint(row);
   return { element, update: paint };
@@ -227,12 +283,24 @@ export function createNeedCard(row: Row): NeedCard {
   return { element };
 }
 
+export type BoardItem = {
+  row: Row;
+  child: boolean;
+  group?: Group;
+  expanded?: boolean;
+  collapsible?: boolean;
+};
+
 export type ProjectCardInput = {
   project: GuestProject;
-  rows: Row[];
+  items: BoardItem[];
   counts: { blocked: number; failed: number; running: number; done: number; archived: number };
   collapsed: boolean;
   error: boolean;
+  /** Rows this card does not show because of the 6-row cap or folded groups. */
+  hiddenRows: number;
+  showAll: boolean;
+  onToggleGroup: (id: string) => void;
 };
 
 export function createProjectCard(input: ProjectCardInput): HTMLElement {
@@ -274,22 +342,53 @@ export function createProjectCard(input: ProjectCardInput): HTMLElement {
     retry.dataset.retry = project.id;
     error.append(retry);
     body.append(error);
-  } else if (input.rows.length === 0) {
+  } else if (input.items.length === 0) {
     body.append(el('div', 'project-error', strings.board.projectEmpty));
   } else {
-    for (const row of input.rows) body.append(createBoardRow(row).element);
+    let childrenRail: HTMLElement | null = null;
+    for (const item of input.items) {
+      if (item.group) {
+        childrenRail = null;
+        body.append(
+          createBoardRow(item.row, {
+            group: item.collapsible,
+            expanded: item.expanded,
+            onToggle: input.onToggleGroup,
+          }).element,
+        );
+      } else if (item.child) {
+        if (!childrenRail) {
+          childrenRail = el('div', 'bchildren');
+          body.append(childrenRail);
+        }
+        childrenRail.append(createBoardRow(item.row, { child: true }).element);
+      } else {
+        childrenRail = null;
+        body.append(createBoardRow(item.row).element);
+      }
+    }
   }
   section.append(body);
 
-  if (input.counts.archived && input.rows.length > 0) {
-    const foot = el('div', 'pcfoot');
-    foot.append(el('span', 'grow'));
+  const foot = el('div', 'pcfoot');
+  foot.append(el('span', 'grow'));
+  if (!input.error && (input.hiddenRows > 0 || input.showAll)) {
+    const more = el('button', 'link');
+    more.type = 'button';
+    more.dataset.cardMore = project.id;
+    more.textContent = input.showAll
+      ? strings.board.fewerSessions
+      : `${strings.board.moreRows(input.hiddenRows)} · ${strings.board.showAll}`;
+    foot.append(more);
+  }
+  if (input.counts.archived && input.items.length > 0) {
     const link = el('button', 'link', strings.board.archivedLink(input.counts.archived));
     link.type = 'button';
     link.dataset.archivedLink = project.id;
+    if (foot.childElementCount > 1) foot.append(el('span', 'sep-dot', strings.sep));
     foot.append(link);
-    section.append(foot);
   }
+  if (foot.childElementCount > 1) section.append(foot);
   return section;
 }
 

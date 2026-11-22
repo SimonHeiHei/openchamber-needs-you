@@ -23,6 +23,18 @@ export type StateName =
 
 export type Surface = 'panel' | 'page' | 'status';
 
+export type Group = {
+  /** The top-level session; it is the group header row. */
+  head: Row;
+  children: Row[];
+  /** head + children, each state group sorted by the same rules as the queue. */
+  members: Row[];
+  /** The most urgent state in the group; decides which section the group joins. */
+  state: StateName;
+  /** Every blocked member (never empty for a group that must stay open). */
+  blocked: Row[];
+};
+
 export type Row = {
   id: string;
   title: string;
@@ -71,6 +83,10 @@ export type View = {
   ended: Row[];
   idle: Row[];
   archived: Row[];
+  /** Top-level groups in section order (blocked first, then failed, running, done, idle). */
+  groups: Group[];
+  /** Non-archived rows, flat and ordered for search, children included. */
+  flatRows: Row[];
   counts: Counts;
   /** Projects with a live subscription. */
   connected: GuestProject[];
@@ -100,7 +116,7 @@ type Entry = {
 
 type StoredSeen = { ids?: unknown; at?: unknown };
 type StoredSubs = { dropped?: unknown };
-export type CollapsedState = { ended: boolean; projects: string[] };
+export type CollapsedState = { ended: boolean; projects: string[]; /** expanded parent session ids */ groups: string[] };
 export type BoardState = { tab: string; query: string };
 
 const isBlockedState = (state: StateName): boolean =>
@@ -176,7 +192,7 @@ export class ControlRoomStore {
   private started = false;
   private disposed = false;
 
-  private collapsed: CollapsedState = { ended: false, projects: [] };
+  private collapsed: CollapsedState = { ended: false, projects: [], groups: [] };
   private board: BoardState = { tab: 'all', query: '' };
 
   private changeHandler: (() => void) | null = null;
@@ -218,6 +234,7 @@ export class ControlRoomStore {
       this.collapsed = {
         ended: value.ended === true,
         projects: stringList(value.projects).slice(0, 400),
+        groups: stringList(value.groups).slice(0, 200),
       };
     }
     if (board.status === 'fulfilled' && isRecord(board.value)) {
@@ -235,6 +252,20 @@ export class ControlRoomStore {
 
   setEndedCollapsed(ended: boolean): void {
     this.collapsed.ended = ended;
+    this.write(COLLAPSED_KEY, this.collapsed);
+  }
+
+  /** Blocked groups are always open; everything else opens only when listed. */
+  isGroupExpanded(group: Group): boolean {
+    return group.blocked.length > 0 || this.collapsed.groups.includes(group.head.id);
+  }
+
+  toggleGroupExpanded(group: Group): void {
+    if (group.blocked.length > 0) return;
+    const set = new Set(this.collapsed.groups);
+    if (set.has(group.head.id)) set.delete(group.head.id);
+    else set.add(group.head.id);
+    this.collapsed.groups = [...set].slice(0, 200);
     this.write(COLLAPSED_KEY, this.collapsed);
   }
 
@@ -546,13 +577,75 @@ export class ControlRoomStore {
       this.initialComplete = true;
     }
 
-    const queue = raw.filter((row) => !row.child && row.state !== 'archived');
-    const waiting = sortWaiting(queue.filter((row) => isBlockedState(row.state)));
-    const failed = sortFailed(queue.filter((row) => row.state === 'failed'));
-    const running = sortRunning(queue.filter((row) => row.state === 'running' || row.state === 'retrying'));
-    const ended = sortEnded(queue.filter((row) => row.state === 'done'));
-    const idle = sortEnded(queue.filter((row) => row.state === 'idle' || row.state === 'unknown'));
+    const activeRows = raw.filter((row) => row.state !== 'archived');
     const archived = sortEnded(raw.filter((row) => row.state === 'archived'));
+    const waiting = sortWaiting(activeRows.filter((row) => isBlockedState(row.state)));
+
+    const childrenByParent = new Map<string, Row[]>();
+    for (const row of activeRows) {
+      if (!row.child || !row.parentId) continue;
+      const list = childrenByParent.get(row.parentId);
+      if (list) list.push(row);
+      else childrenByParent.set(row.parentId, [row]);
+    }
+    const sortMembers = (rows: Row[]): Row[] => [
+      ...sortWaiting(rows.filter((row) => isBlockedState(row.state))),
+      ...sortFailed(rows.filter((row) => row.state === 'failed')),
+      ...sortRunning(rows.filter((row) => row.state === 'running' || row.state === 'retrying')),
+      ...sortEnded(rows.filter((row) => row.state === 'done')),
+      ...sortEnded(rows.filter((row) => row.state === 'idle' || row.state === 'unknown')),
+    ];
+    const groups: Group[] = [];
+    for (const head of activeRows) {
+      if (head.child) continue;
+      const children = sortMembers(childrenByParent.get(head.id) ?? []);
+      const members = [head, ...children];
+      const blocked = members.filter((row) => isBlockedState(row.state));
+      // A blocked child forces the group into the queue; otherwise the child
+      // follows its parent, exactly like the host's own session list.
+      const state: StateName = blocked.length > 0
+        ? (blocked.some((row) => row.state === 'permission') ? 'permission' : 'question')
+        : head.state;
+      groups.push({ head, children, members, state, blocked });
+    }
+    const groupRank = (group: Group): number =>
+      group.state === 'permission' ? 0
+        : group.state === 'question' ? 1
+          : group.state === 'failed' ? 2
+            : group.state === 'retrying' || group.state === 'running' ? 3
+              : group.state === 'done' ? 4
+                : 5;
+    const oldestBlock = (group: Group): number =>
+      Math.min(...group.blocked.map((row) => row.updatedAt));
+    const newestMember = (group: Group): number =>
+      Math.max(...group.members.map((row) => row.updatedAt));
+    groups.sort((a, b) => {
+      const rankA = groupRank(a);
+      const rankB = groupRank(b);
+      if (rankA !== rankB) return rankA - rankB;
+      if (rankA <= 1) return oldestBlock(a) - oldestBlock(b) || a.head.id.localeCompare(b.head.id);
+      if (rankA === 2) return newestMember(b) - newestMember(a) || a.head.id.localeCompare(b.head.id);
+      if (rankA === 3) {
+        const runningA = a.state === 'retrying' ? 0 : 1;
+        const runningB = b.state === 'retrying' ? 0 : 1;
+        return runningA - runningB || b.head.updatedAt - a.head.updatedAt || a.head.id.localeCompare(b.head.id);
+      }
+      return b.head.updatedAt - a.head.updatedAt || a.head.id.localeCompare(b.head.id);
+    });
+
+    const headsIn = (...states: StateName[]): Row[] =>
+      groups.filter((group) => states.includes(group.state)).map((group) => group.head);
+    const failed = headsIn('failed');
+    const running = headsIn('running', 'retrying');
+    const ended = headsIn('done');
+    const idle = headsIn('idle');
+    const flatRows = [
+      ...waiting,
+      ...sortFailed(activeRows.filter((row) => row.state === 'failed')),
+      ...sortRunning(activeRows.filter((row) => row.state === 'running' || row.state === 'retrying')),
+      ...sortEnded(activeRows.filter((row) => row.state === 'done')),
+      ...sortEnded(activeRows.filter((row) => row.state === 'idle' || row.state === 'unknown')),
+    ];
 
     this.currentBlocked = waiting.map((row) => row.id);
 
@@ -584,7 +677,8 @@ export class ControlRoomStore {
       phase: this.fatal ? 'error' : this.projectsState,
       hasData: this.lastReadyAt > 0,
       sessionsLoaded:
-        this.entries.size > 0 && [...this.entries.values()].every((entry) => entry.state !== 'loading'),
+        this.projects.length === 0
+        || (this.entries.size > 0 && [...this.entries.values()].every((entry) => entry.state !== 'loading')),
       fatal: this.fatal,
       rows: raw,
       waiting,
@@ -593,6 +687,8 @@ export class ControlRoomStore {
       ended,
       idle,
       archived,
+      groups,
+      flatRows,
       counts,
       connected,
       unconnected,
