@@ -278,6 +278,7 @@ export function createNeedCard(row: Row): NeedCard {
   element.setAttribute('role', 'button');
   element.tabIndex = 0;
   element.dataset.id = row.id;
+  element.dataset.key = row.id;
   element.title = row.title;
   toneVars(tone, element);
 
@@ -292,7 +293,9 @@ export function createNeedCard(row: Row): NeedCard {
   if (row.branch) bottom.append(el('span', 'nc-branch', row.branch));
   if (!blocked) bottom.append(el('span', 'nc-wait', formatClock(row.updatedAt)));
   bottom.append(el('span', 'nc-open', strings.board.openSession));
-  element.append(top, title, bottom);
+  const halo = el('span', 'halo');
+  halo.setAttribute('aria-hidden', 'true');
+  element.append(top, title, bottom, halo);
   const waited = row.state === 'permission' || row.state === 'question' ? formatDuration(row.waitedMs) : null;
   element.setAttribute('aria-label', strings.aria.row(row.title, strings.state[row.state], row.projectName, waited));
   return { element };
@@ -335,16 +338,19 @@ export function createProjectCard(input: ProjectCardInput): HTMLElement {
   head.append(el('span', 'pname', project.name));
   if (input.counts.blocked) {
     const chip = el('span', 'chipb', strings.board.chip.blocked(input.counts.blocked));
+    chip.dataset.chip = `${project.id}:blocked`;
     toneVars('warning', chip);
     head.append(chip);
   }
   if (input.counts.failed) {
     const chip = el('span', 'chipb', strings.board.chip.failed(input.counts.failed));
+    chip.dataset.chip = `${project.id}:failed`;
     toneVars('error', chip);
     head.append(chip);
   }
   if (input.counts.running) {
     const chip = el('span', 'chipb', strings.board.chip.running(input.counts.running));
+    chip.dataset.chip = `${project.id}:running`;
     toneVars('info', chip);
     head.append(chip);
   }
@@ -352,6 +358,8 @@ export function createProjectCard(input: ProjectCardInput): HTMLElement {
   section.append(head);
 
   const body = el('div', 'pcardbody');
+  body.dataset.collapsed = input.collapsed ? 'true' : 'false';
+  const bodyInner = el('div', 'pcardbody-inner');
   if (input.error) {
     const error = el('div', 'project-error');
     error.append(el('span', '', `${strings.board.projectError} · `));
@@ -359,15 +367,15 @@ export function createProjectCard(input: ProjectCardInput): HTMLElement {
     retry.type = 'button';
     retry.dataset.retry = project.id;
     error.append(retry);
-    body.append(error);
+    bodyInner.append(error);
   } else if (input.items.length === 0) {
-    body.append(el('div', 'project-error', strings.board.projectEmpty));
+    bodyInner.append(el('div', 'project-error', strings.board.projectEmpty));
   } else {
     let childrenRail: HTMLElement | null = null;
     for (const item of input.items) {
       if (item.group) {
         childrenRail = null;
-        body.append(
+        bodyInner.append(
           createBoardRow(item.row, {
             group: item.collapsible,
             expanded: item.expanded,
@@ -377,15 +385,16 @@ export function createProjectCard(input: ProjectCardInput): HTMLElement {
       } else if (item.child) {
         if (!childrenRail) {
           childrenRail = el('div', 'bchildren');
-          body.append(childrenRail);
+          bodyInner.append(childrenRail);
         }
         childrenRail.append(createBoardRow(item.row, { child: true }).element);
       } else {
         childrenRail = null;
-        body.append(createBoardRow(item.row).element);
+        bodyInner.append(createBoardRow(item.row).element);
       }
     }
   }
+  body.append(bodyInner);
   section.append(body);
 
   const foot = el('div', 'pcfoot');
@@ -406,7 +415,15 @@ export function createProjectCard(input: ProjectCardInput): HTMLElement {
     if (foot.childElementCount > 1) foot.append(el('span', 'sep-dot', strings.sep));
     foot.append(link);
   }
-  if (foot.childElementCount > 1) section.append(foot);
+  const hasFoot = foot.childElementCount > 1;
+  if (hasFoot) bodyInner.append(foot);
+  // A static filler keeps the 6-row silhouette without a height/min-height
+  // animation: it lives inside the folding grid, so collapse stays smooth.
+  const used = input.items.length * 28 + (hasFoot ? 22 : 0);
+  const filler = el('div', 'pfiller');
+  filler.setAttribute('aria-hidden', 'true');
+  filler.style.height = `${Math.max(0, 6 * 28 + 25 - used)}px`;
+  bodyInner.append(filler);
   return section;
 }
 

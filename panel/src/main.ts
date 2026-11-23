@@ -7,10 +7,10 @@ import {
   mountBanner,
   mountEmpty,
   mountSearchField,
-  mountTabs,
 } from '@openchamber/sdk/ui';
 
 import * as dom from './dom';
+import * as motion from './motion';
 import { ControlRoomStore, type Group, type Row, type StateName, type View } from './store';
 import { BASE_STYLE, PAGE_STYLE, PANEL_STYLE } from './style';
 import { formatClock, metaFor, setLocale, t } from './strings';
@@ -699,6 +699,7 @@ function mountPage(): void {
   styleEl.textContent = BASE_STYLE + PAGE_STYLE;
   root!.className = 'page-root';
 
+  const page = root!;
   const strings = t();
   const live = dom.el('div', 'gone');
   live.setAttribute('aria-live', 'polite');
@@ -708,38 +709,83 @@ function mountPage(): void {
   const updated = dom.el('div', 'pgupd');
   head.append(title, updated);
 
-  const summary = dom.el('div', 'pgsum');
   const tools = dom.el('div', 'pgtools');
-  const tabsSlot = dom.el('div');
+  const tabsBar = dom.el('div', 'tabs');
+  tabsBar.setAttribute('role', 'tablist');
+  const tabButtons = new Map<Filter, HTMLButtonElement>();
+  const tabCounts = new Map<Filter, HTMLElement>();
+  const order: Filter[] = ['all', 'needs', 'running', 'ended', 'archived'];
+  for (const id of order) {
+    const button = dom.el('button', 'tab');
+    button.type = 'button';
+    button.setAttribute('role', 'tab');
+    button.dataset.filter = id;
+    const label = dom.el('span', 'tab-label');
+    const count = dom.el('span', 'n');
+    button.append(label, count);
+    tabsBar.append(button);
+    tabButtons.set(id, button);
+    tabCounts.set(id, count);
+  }
+  const indicator = dom.el('span', 'tab-ind');
+  indicator.setAttribute('aria-hidden', 'true');
+  tabsBar.append(indicator);
   const searchSlot = dom.el('div', 'searchslot');
-  tools.append(tabsSlot, searchSlot);
+  tools.append(tabsBar, searchSlot);
 
   const bannerSlot = dom.el('div', 'banner-slot');
   bannerSlot.hidden = true;
-  const railHead = dom.el('div', 'boardhead');
-  const railTitle = dom.el('h3');
-  const railMeta = dom.el('span', 'meta');
-  railHead.append(railTitle, railMeta);
-  const rail = dom.el('div', 'railcards');
 
-  const boardHead = dom.el('div', 'boardhead');
-  const boardTitle = dom.el('h3', '', strings.board.heading);
-  const boardMeta = dom.el('span', 'meta');
-  boardHead.append(boardTitle, boardMeta);
+  const needs = dom.el('section', 'needs');
+  needs.setAttribute('aria-label', t().board.filters.needs);
+  needs.dataset.collapsed = 'false';
+  const needsInner = dom.el('div', 'needs-inner');
+  const railLine = dom.el('div', 'sectline');
+  const railLabel = dom.el('span', '', t().board.filters.needs);
+  const railCount = dom.el('span', 'n', '0');
+  const railMeta = dom.el('span', 'sm');
+  railLine.append(railLabel, railCount, railMeta);
+  const rail = dom.el('div', 'railcards');
+  needsInner.append(railLine, rail);
+  needs.append(needsInner);
+
+  const boardSection = dom.el('section', 'boardsec');
+  const boardLine = dom.el('div', 'sectline');
+  const boardLabel = dom.el('span', '', strings.board.heading);
+  const boardMeta = dom.el('span', 'sm');
+  boardLine.append(boardLabel, boardMeta);
   const board = dom.el('div', 'board');
   const boardFoot = dom.el('div', 'boardfoot');
+  const othersWrap = dom.el('div', 'others');
+  othersWrap.dataset.open = 'false';
+  const othersInner = dom.el('div', 'others-inner');
+  const extraBoard = dom.el('div', 'board board-extra');
+  othersInner.append(extraBoard);
+  othersWrap.append(othersInner);
+
   const unconnected = dom.el('div', 'unconnected');
   unconnected.hidden = true;
   const emptySlot = dom.el('div', 'empty-slot');
   emptySlot.hidden = true;
 
-  root!.append(head, summary, tools, bannerSlot, railHead, rail, boardHead, board, boardFoot, unconnected, emptySlot, live);
+  const skel = dom.el('div', 'page-skel');
+  skel.setAttribute('aria-hidden', 'true');
+  const skHead = dom.el('div', 'skhead');
+  skHead.append(dom.el('i', 'skbar'), dom.el('i', 'skbar'));
+  const skRail = dom.el('div', 'skrail');
+  for (let index = 0; index < 3; index += 1) skRail.append(dom.el('i'));
+  const skGrid = dom.el('div', 'skgrid');
+  for (let index = 0; index < 6; index += 1) skGrid.append(dom.el('i'));
+  const skFoot = dom.el('div', 'skhead');
+  skFoot.append(dom.el('i', 'skbar'));
+  skel.append(skHead, skRail, skGrid, skFoot);
+
+  boardSection.append(boardLine, board, boardFoot, othersWrap);
+  page.append(head, tools, bannerSlot, needs, boardSection, unconnected, emptySlot, live, skel);
 
   const store = new ControlRoomStore(host, 'page');
   const saved = store.getBoard();
-  let filter: Filter = (['all', 'needs', 'running', 'ended', 'archived'] as Filter[]).includes(saved.tab as Filter)
-    ? (saved.tab as Filter)
-    : 'all';
+  let filter: Filter = (order as string[]).includes(saved.tab) ? (saved.tab as Filter) : 'all';
   let query = saved.query;
   let othersOpen = false;
   let unconnectedOpen = false;
@@ -748,23 +794,48 @@ function mountPage(): void {
   const cardShowAll = new Set<string>();
   const pageGroups = new Map<string, Group>();
 
+  const pendingFlip = { cards: false };
+  let pendingIndicator = false;
+  let bootIndex = false;
+  let contentReady = false;
+
+  const pageStates = new Map<string, StateName>();
+  const lastCounts = new Map<string, number>();
+  const prevBlockedChips = new Map<string, number>();
+  const flightTimers: number[] = [];
+
+  interface Migration {
+    id: string;
+    row: Row;
+    direction: 'in' | 'out';
+    from: DOMRect;
+  }
+
+  const prefersReduced = (): boolean => motion.reducedMotion();
+
+  const findById = (selector: string, id: string): HTMLElement | null => {
+    for (const element of page.querySelectorAll<HTMLElement>(selector)) {
+      if (element.dataset.id === id) return element;
+    }
+    return null;
+  };
+
+  const clearFlights = (): void => {
+    motion.removeFlyers();
+    for (const timer of flightTimers) window.clearTimeout(timer);
+    flightTimers.length = 0;
+    for (const element of page.querySelectorAll<HTMLElement>('[data-cr-ghost]')) {
+      element.style.opacity = '';
+      delete element.dataset.crGhost;
+    }
+  };
+
   const toggleBoardGroup = (id: string): void => {
     const group = pageGroups.get(id);
     if (!group) return;
     store.toggleGroupExpanded(group);
     render();
   };
-
-  const tabs = mountTabs(tabsSlot, {
-    items: [],
-    activeId: filter,
-    trackBackground: true,
-    onChange: (id) => {
-      filter = id as Filter;
-      store.setBoard({ tab: filter });
-      render();
-    },
-  });
 
   const search = mountSearchField(searchSlot, {
     value: query,
@@ -773,6 +844,7 @@ function mountPage(): void {
     onChange: (value) => {
       query = value;
       store.setBoard({ query });
+      pendingFlip.cards = true;
       render();
     },
   });
@@ -796,6 +868,12 @@ function mountPage(): void {
     emptyHandle = null;
     emptySlot.textContent = '';
     emptySlot.hidden = true;
+  };
+
+  const setSectionsVisible = (visible: boolean): void => {
+    needs.hidden = !visible;
+    boardSection.hidden = !visible;
+    unconnected.hidden = !visible;
   };
 
   const renderBanner = (view: View): void => {
@@ -856,10 +934,22 @@ function mountPage(): void {
 
   const hideBoard = (): void => {
     board.textContent = '';
+    extraBoard.textContent = '';
     boardFoot.hidden = true;
-    rail.hidden = true;
-    railHead.hidden = true;
     boardMeta.textContent = '';
+  };
+
+  const countsFor = (view: View, projectId: string): { blocked: number; failed: number; running: number; done: number; archived: number } => {
+    const counts = { blocked: 0, failed: 0, running: 0, done: 0, archived: 0 };
+    for (const row of view.rows) {
+      if (row.projectId !== projectId) continue;
+      if (isBlocked(row.state)) counts.blocked += 1;
+      else if (row.state === 'failed') counts.failed += 1;
+      else if (row.state === 'running' || row.state === 'retrying') counts.running += 1;
+      else if (row.state === 'done') counts.done += 1;
+      else if (row.state === 'archived') counts.archived += 1;
+    }
+    return counts;
   };
 
   const renderCards = (view: View, rows: Row[]): void => {
@@ -872,22 +962,9 @@ function mountPage(): void {
       else byProject.set(row.projectId, [row]);
     }
 
-    const countsFor = (projectId: string): { blocked: number; failed: number; running: number; done: number; archived: number } => {
-      const counts = { blocked: 0, failed: 0, running: 0, done: 0, archived: 0 };
-      for (const row of view.rows) {
-        if (row.projectId !== projectId) continue;
-        if (isBlocked(row.state)) counts.blocked += 1;
-        else if (row.state === 'failed') counts.failed += 1;
-        else if (row.state === 'running' || row.state === 'retrying') counts.running += 1;
-        else if (row.state === 'done') counts.done += 1;
-        else if (row.state === 'archived') counts.archived += 1;
-      }
-      return counts;
-    };
-
     const visible = projects.filter((project) => (byProject.get(project.id)?.length ?? 0) > 0);
     const score = (project: GuestProject): number => {
-      const counts = countsFor(project.id);
+      const counts = countsFor(view, project.id);
       if (counts.blocked > 0) return 0;
       if (counts.failed > 0) return 1;
       if (counts.running > 0) return 2;
@@ -897,8 +974,9 @@ function mountPage(): void {
       (byProject.get(project.id) ?? []).reduce((max, row) => Math.max(max, row.updatedAt), 0);
     visible.sort((a, b) => score(a) - score(b) || latest(b) - latest(a) || a.name.localeCompare(b.name));
 
-    const cards = othersOpen ? visible : visible.slice(0, 16);
-    const firstBlockedId = visible.find((project) => countsFor(project.id).blocked > 0)?.id;
+    const primary = visible.slice(0, 16);
+    const extra = visible.slice(16);
+    const firstBlockedId = visible.find((project) => countsFor(view, project.id).blocked > 0)?.id;
     if (isTouch() && !phoneSeeded) {
       phoneSeeded = true;
       for (const project of visible) {
@@ -922,8 +1000,8 @@ function mountPage(): void {
     const buildItems = (project: GuestProject): { items: dom.BoardItem[]; total: number } => {
       const showAll = cardShowAll.has(project.id);
       if (filter === 'archived') {
-        const rows = sortForBoard((byProject.get(project.id) ?? []));
-        const items = rows.map((row) => ({ row, child: row.child } as dom.BoardItem));
+        const archivedRows = sortForBoard(byProject.get(project.id) ?? []);
+        const items = archivedRows.map((row) => ({ row, child: row.child } as dom.BoardItem));
         return { items: showAll ? items : items.slice(0, CARD_ROW_LIMIT), total: items.length };
       }
       const items: dom.BoardItem[] = [];
@@ -954,17 +1032,17 @@ function mountPage(): void {
       return { items: showAll ? items : items.slice(0, CARD_ROW_LIMIT), total };
     };
 
-    board.textContent = '';
-    for (const project of cards) {
+    const appendCard = (container: HTMLElement, project: GuestProject): void => {
       const built = buildItems(project);
       const showAll = cardShowAll.has(project.id);
-      board.append(
+      const counts = countsFor(view, project.id);
+      container.append(
         dom.createProjectCard({
           project,
           items: built.items,
           counts: {
-            ...countsFor(project.id),
-            archived: filter === 'archived' ? 0 : countsFor(project.id).archived,
+            ...counts,
+            archived: filter === 'archived' ? 0 : counts.archived,
           },
           collapsed: store.getCollapsed().projects.includes(project.id),
           error: view.errorProjects.includes(project.name),
@@ -973,9 +1051,28 @@ function mountPage(): void {
           onToggleGroup: toggleBoardGroup,
         }),
       );
+    };
+
+    board.textContent = '';
+    extraBoard.textContent = '';
+    for (const project of primary) appendCard(board, project);
+    for (const project of extra) appendCard(extraBoard, project);
+
+    // A "waiting" chip only pops when it is new (0 → >0), never on a number change.
+    if (contentReady) {
+      for (const project of projects) {
+        const current = countsFor(view, project.id).blocked;
+        const previous = prevBlockedChips.get(project.id) ?? current;
+        if (previous === 0 && current > 0) {
+          motion.popChip(page.querySelector<HTMLElement>(`[data-chip="${project.id}:blocked"]`));
+        }
+        prevBlockedChips.set(project.id, current);
+      }
+    } else {
+      for (const project of projects) prevBlockedChips.set(project.id, countsFor(view, project.id).blocked);
     }
 
-    const rest = projects.filter((project) => !cards.some((card) => card.id === project.id));
+    const rest = projects.filter((project) => !primary.some((card) => card.id === project.id));
     const restSessions = rest.reduce(
       (total, project) => total + view.rows.filter((row) => row.projectId === project.id).length,
       0,
@@ -1000,25 +1097,32 @@ function mountPage(): void {
         filter = 'archived';
         store.setBoard({ tab: 'archived' });
         othersOpen = false;
+        pendingFlip.cards = true;
+        pendingIndicator = true;
         render();
       });
       boardFoot.append(archived);
     }
+    othersWrap.dataset.open = othersOpen ? 'true' : 'false';
+    boardFoot.hidden = false;
   };
 
   const renderRail = (view: View): void => {
     const stringsNow = t();
-    const show = filter !== 'ended' && filter !== 'archived';
     const cards = [...view.waiting, ...view.failed].filter(matchesQuery);
-    const visible = show && cards.length > 0;
-    railHead.hidden = !visible;
-    rail.hidden = !visible;
-    if (!visible) return;
-    railTitle.textContent = stringsNow.board.needsYou(view.counts.blocked + view.counts.failed);
+    railLabel.textContent = stringsNow.board.filters.needs;
     railMeta.textContent = stringsNow.board.needsMeta(view.counts.blocked, view.counts.failed);
     rail.textContent = '';
     rail.classList.toggle('few', cards.length < 3);
-    for (const row of cards) rail.append(dom.createNeedCard(row).element);
+    if (cards.length === 0) {
+      rail.append(dom.el('div', 'calm', stringsNow.panel.clearWaiting));
+      return;
+    }
+    cards.forEach((row, index) => {
+      const card = dom.createNeedCard(row).element;
+      if (bootIndex) card.style.setProperty('--i', String(index));
+      rail.append(card);
+    });
   };
 
   const renderUnconnected = (view: View): void => {
@@ -1057,77 +1161,187 @@ function mountPage(): void {
     }
   };
 
+  const indicatorPosition = { x: 0, w: 0 };
+
+  const updateIndicator = (animate: boolean): void => {
+    const active = tabsBar.querySelector<HTMLElement>('.tab[aria-selected="true"]');
+    if (!active) return;
+    const x = active.offsetLeft;
+    const w = active.offsetWidth;
+    const transform = `translateX(${x}px) scaleX(${w})`;
+    indicator.style.transform = transform;
+    if (!animate || prefersReduced() || indicatorPosition.w === 0) {
+      indicatorPosition.x = x;
+      indicatorPosition.w = w;
+      return;
+    }
+    indicator.animate(
+      [
+        { transform: `translateX(${indicatorPosition.x}px) scaleX(${indicatorPosition.w})` },
+        { transform },
+      ],
+      { duration: 240, easing: motion.EASE },
+    );
+    indicatorPosition.x = x;
+    indicatorPosition.w = w;
+  };
+
+  const updateTabs = (view: View, animateCounts: boolean): void => {
+    const stringsNow = t();
+    const counts: Record<Filter, number> = {
+      all: view.rows.filter((row) => row.state !== 'archived').length,
+      needs: view.counts.blocked + view.counts.failed,
+      running: view.counts.inflight,
+      ended: view.counts.ended,
+      archived: view.counts.archived,
+    };
+    for (const id of order) {
+      const button = tabButtons.get(id);
+      const count = tabCounts.get(id);
+      if (!button || !count) continue;
+      button.setAttribute('aria-selected', id === filter ? 'true' : 'false');
+      const label = button.querySelector<HTMLElement>('.tab-label');
+      if (label) label.textContent = stringsNow.board.filters[id];
+      const next = counts[id];
+      const previous = lastCounts.get(id);
+      if (animateCounts && previous !== undefined && previous !== next) motion.countTo(count, next, previous);
+      else count.textContent = String(next);
+      lastCounts.set(id, next);
+    }
+    const needsNext = counts.needs;
+    const needsPrevious = lastCounts.get('needsSection');
+    if (animateCounts && needsPrevious !== undefined && needsPrevious !== needsNext) motion.countTo(railCount, needsNext, needsPrevious);
+    else railCount.textContent = String(needsNext);
+    lastCounts.set('needsSection', needsNext);
+  };
+
+  const renderMigrations = (list: Migration[]): void => {
+    list.forEach((migration, index) => {
+      const timer = window.setTimeout(() => {
+        if (migration.direction === 'in') {
+          const card = findById('.ncard', migration.id);
+          if (!card) return;
+          if (prefersReduced()) {
+            motion.fadeIn(card, 220);
+            motion.pulse(card, true);
+            return;
+          }
+          const to = card.getBoundingClientRect();
+          card.dataset.crGhost = '1';
+          card.style.opacity = '0';
+          const flyer = motion.makeFlyer(migration.row.title, migration.row.projectName, migration.from);
+          motion.flyTo(flyer, migration.from, to, 500, -10);
+          window.setTimeout(() => {
+            card.style.opacity = '';
+            delete card.dataset.crGhost;
+            card.animate(
+              [
+                { opacity: 0, transform: 'translateY(8px) scale(.98)' },
+                { opacity: 1, transform: 'translateY(0) scale(1)' },
+              ],
+              { duration: 300, easing: motion.EASE },
+            );
+            motion.pulse(card, false);
+          }, 240);
+          return;
+        }
+        const rowElement = findById('.brow', migration.id);
+        if (!rowElement) return;
+        if (prefersReduced()) {
+          motion.fadeIn(rowElement, 180);
+          motion.land(rowElement, true);
+          return;
+        }
+        const to = rowElement.getBoundingClientRect();
+        rowElement.dataset.crGhost = '1';
+        rowElement.style.opacity = '0';
+        const flyer = motion.makeFlyer(migration.row.title, migration.row.projectName, migration.from);
+        motion.flyTo(flyer, migration.from, to, 400, 6);
+        window.setTimeout(() => {
+          rowElement.style.opacity = '';
+          delete rowElement.dataset.crGhost;
+          rowElement.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 180, easing: motion.EASE });
+          motion.land(rowElement, false);
+        }, 260);
+      }, index * 40);
+      flightTimers.push(timer);
+    });
+  };
+
   const render = (): void => {
     const stringsNow = t();
     const view = store.run();
+    if (contentReady) page.classList.remove('boot');
+    const previousStates = new Map(pageStates);
+    pageStates.clear();
+    for (const row of view.rows) pageStates.set(row.id, row.state);
+    clearFlights();
     title.textContent = stringsNow.panel.title;
+    boardLabel.textContent = stringsNow.board.heading;
     search.update({ placeholder: stringsNow.board.search, label: stringsNow.board.search });
+    needs.setAttribute('aria-label', stringsNow.board.filters.needs);
 
     if (view.phase === 'loading' && !view.hasData) updated.textContent = stringsNow.board.updating;
     else if (view.hasData) {
       updated.textContent = view.phase === 'loading' ? stringsNow.board.updating : stringsNow.board.updated(formatClock(view.updatedAt));
     } else updated.textContent = '';
 
-    summary.textContent = '';
-    summary.append(dom.pageSummaryParts(view));
-
-    tabs.update({
-      items: [
-        { id: 'all', label: stringsNow.board.filters.all, count: view.rows.filter((row) => row.state !== 'archived').length },
-        { id: 'needs', label: stringsNow.board.filters.needs, count: view.counts.blocked + view.counts.failed },
-        { id: 'running', label: stringsNow.board.filters.running, count: view.counts.inflight },
-        { id: 'ended', label: stringsNow.board.filters.ended, count: view.counts.ended },
-        { id: 'archived', label: stringsNow.board.filters.archived, count: view.counts.archived },
-      ],
-      activeId: filter,
-    });
-
     renderBanner(view);
 
-    if (view.fatal) {
-      hideBoard();
-      const copy =
-        view.fatal === 'NOT_GRANTED'
-          ? [stringsNow.error.notGrantedTitle, stringsNow.error.notGrantedBody]
-          : view.fatal === 'DISABLED'
-            ? [stringsNow.error.disabledTitle, stringsNow.error.disabledBody]
-            : [stringsNow.error.unavailableTitle, stringsNow.error.unavailableBody];
-      showEmpty(`fatal:${view.fatal}`, copy[0]!, copy[1]!);
+    const loading = !view.hasData || (view.counts.sessions === 0 && !view.sessionsLoaded && view.phase !== 'error');
+    page.classList.toggle('is-loading', loading && !view.fatal);
+    if (loading && !view.fatal) {
+      page.setAttribute('aria-busy', 'true');
+      updateTabs(view, false);
       return;
     }
+    page.classList.remove('is-loading');
+    page.removeAttribute('aria-busy');
 
+    const fatalCopy = view.fatal
+      ? view.fatal === 'NOT_GRANTED'
+        ? [stringsNow.error.notGrantedTitle, stringsNow.error.notGrantedBody]
+        : view.fatal === 'DISABLED'
+          ? [stringsNow.error.disabledTitle, stringsNow.error.disabledBody]
+          : [stringsNow.error.unavailableTitle, stringsNow.error.unavailableBody]
+      : null;
+
+    if (fatalCopy) {
+      hideBoard();
+      setSectionsVisible(false);
+      showEmpty(`fatal:${view.fatal}`, fatalCopy[0]!, fatalCopy[1]!);
+      updateTabs(view, false);
+      return;
+    }
     if (view.phase === 'error' && !view.hasData) {
+      hideBoard();
+      setSectionsVisible(false);
       showEmpty('projects-error', stringsNow.error.allTitle, '', {
         label: stringsNow.error.retry,
         onClick: () => void store.retry(),
       });
-      hideBoard();
-      renderUnconnected(view);
-      return;
-    }
-    if (!view.hasData || (view.counts.sessions === 0 && !view.sessionsLoaded)) {
-      hideEmpty();
-      board.textContent = '';
-      board.append(dom.pageSkeleton());
-      boardFoot.hidden = true;
-      renderUnconnected(view);
+      updateTabs(view, false);
       return;
     }
     if (view.counts.projects === 0) {
-      showEmpty('no-projects', stringsNow.empty.noProjectsTitle, stringsNow.empty.noProjectsBody);
       hideBoard();
-      renderUnconnected(view);
+      setSectionsVisible(false);
+      showEmpty('no-projects', stringsNow.empty.noProjectsTitle, stringsNow.empty.noProjectsBody);
+      updateTabs(view, false);
       return;
     }
     if (view.counts.sessions === 0 && view.phase === 'ready' && view.sessionsLoaded) {
-      showEmpty('no-sessions', stringsNow.empty.noSessionsTitle, stringsNow.empty.noSessionsBody);
       hideBoard();
-      renderUnconnected(view);
+      setSectionsVisible(false);
+      showEmpty('no-sessions', stringsNow.empty.noSessionsTitle, stringsNow.empty.noSessionsBody);
+      updateTabs(view, false);
       return;
     }
 
     const rows = rowsForTab(view);
     if (rows.length === 0) {
+      hideBoard();
+      setSectionsVisible(false);
       showEmpty(
         'no-match',
         stringsNow.board.noMatch,
@@ -1139,20 +1353,81 @@ function mountPage(): void {
             filter = 'all';
             search.update({ value: '' });
             store.setBoard({ tab: 'all', query: '' });
+            pendingFlip.cards = true;
+            pendingIndicator = true;
             render();
           },
         },
       );
-      hideBoard();
-      renderUnconnected(view);
+      updateTabs(view, false);
       return;
     }
 
     hideEmpty();
+    setSectionsVisible(true);
+    renderUnconnected(view);
+
+    // Capture the old geometry before the DOM changes.
+    const cardsBefore = pendingFlip.cards ? motion.snap(board, '.pcard', 'data-project-id') : null;
+    const railBefore = pendingFlip.cards ? motion.snap(rail, '.ncard', 'data-id') : null;
+    const migrations: Migration[] = [];
+    if (previousStates.size > 0) {
+      for (const row of view.rows) {
+        const previous = previousStates.get(row.id);
+        if (!previous) continue;
+        const wasRunning = previous === 'running' || previous === 'retrying';
+        const nowBlocked = row.state === 'permission' || row.state === 'question';
+        const wasBlocked = previous === 'permission' || previous === 'question';
+        const nowRunning = row.state === 'running' || row.state === 'retrying';
+        if (wasRunning && nowBlocked) {
+          const source = findById('.brow', row.id);
+          if (source) migrations.push({ id: row.id, row, direction: 'in', from: source.getBoundingClientRect() });
+        } else if (wasBlocked && nowRunning) {
+          const source = findById('.ncard', row.id);
+          if (source) migrations.push({ id: row.id, row, direction: 'out', from: source.getBoundingClientRect() });
+        }
+      }
+    }
+
+    const firstContent = !contentReady;
+    if (firstContent) {
+      bootIndex = true;
+      page.classList.add('boot');
+      window.setTimeout(() => page.classList.remove('boot'), 900);
+    }
+
+    needs.dataset.collapsed = filter === 'ended' || filter === 'archived' ? 'true' : 'false';
     renderRail(view);
     boardMeta.textContent = stringsNow.board.meta(view.counts.sessions - view.counts.archived, view.counts.projects);
     renderCards(view, rows);
-    renderUnconnected(view);
+
+    // Hide the landing target before the browser paints: the flight owns the reveal.
+    for (const migration of migrations) {
+      const target = migration.direction === 'in' ? findById('.ncard', migration.id) : findById('.brow', migration.id);
+      if (!target) continue;
+      target.dataset.crGhost = '1';
+      target.style.opacity = '0';
+    }
+
+    updateTabs(view, !firstContent);
+    updateIndicator(pendingIndicator);
+    bootIndex = false;
+    contentReady = true;
+
+    if (pendingFlip.cards && cardsBefore && railBefore) {
+      requestAnimationFrame(() => {
+        motion.flip(board, '.pcard', 'data-project-id', cardsBefore, 340);
+        motion.flip(rail, '.ncard', 'data-id', railBefore, 300);
+      });
+    }
+    pendingFlip.cards = false;
+    pendingIndicator = false;
+
+    if (migrations.length > 0) requestAnimationFrame(() => renderMigrations(migrations));
+
+    if (view.fresh.length > 0) {
+      live.textContent = '';
+    }
   };
 
   currentRender = render;
@@ -1161,6 +1436,42 @@ function mountPage(): void {
   void store.start();
 
   startClock(() => refreshTimes(root!, store));
+
+  const paused = (): void => {
+    page.classList.toggle('is-paused', document.hidden);
+  };
+  document.addEventListener('visibilitychange', paused);
+  paused();
+  window.addEventListener('resize', () => updateIndicator(false));
+
+  tabsBar.addEventListener('click', (event) => {
+    const target = (event.target as HTMLElement).closest<HTMLElement>('[data-filter]');
+    if (!target) return;
+    const next = target.dataset.filter as Filter;
+    if (next === filter) return;
+    filter = next;
+    store.setBoard({ tab: filter });
+    pendingFlip.cards = true;
+    pendingIndicator = true;
+    render();
+  });
+
+  tabsBar.addEventListener('keydown', (event) => {
+    if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+    event.preventDefault();
+    const index = order.indexOf(filter);
+    let next = index;
+    if (event.key === 'ArrowLeft') next = (index - 1 + order.length) % order.length;
+    else if (event.key === 'ArrowRight') next = (index + 1) % order.length;
+    else if (event.key === 'Home') next = 0;
+    else next = order.length - 1;
+    filter = order[next]!;
+    store.setBoard({ tab: filter });
+    pendingFlip.cards = true;
+    pendingIndicator = true;
+    render();
+    tabButtons.get(filter)?.focus();
+  });
 
   board.addEventListener('click', (event) => {
     const target = event.target as HTMLElement;
@@ -1175,14 +1486,22 @@ function mountPage(): void {
     }
     const cardHead = target.closest<HTMLElement>('[data-card]');
     if (cardHead?.dataset.card) {
-      toggleCollapsed(store, cardHead.dataset.card);
-      render();
+      const id = cardHead.dataset.card;
+      toggleCollapsed(store, id);
+      const card = cardHead.closest<HTMLElement>('.pcard');
+      const body = card?.querySelector<HTMLElement>('.pcardbody');
+      const collapsed = store.getCollapsed().projects.includes(id);
+      cardHead.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+      if (body) body.dataset.collapsed = collapsed ? 'true' : 'false';
+      if (card) card.dataset.collapsed = collapsed ? 'true' : 'false';
       return;
     }
     const archivedLink = target.closest<HTMLElement>('[data-archived-link]');
     if (archivedLink) {
       filter = 'archived';
       store.setBoard({ tab: 'archived' });
+      pendingFlip.cards = true;
+      pendingIndicator = true;
       render();
       return;
     }
