@@ -47,11 +47,13 @@ else {
   } else ok('capabilities ["sessions"] only');
 
   const panel = contributes.panel ?? {};
-  if (!/^[a-z][a-z0-9-]*$/.test(panel.id ?? '')) fail('panel.id is not kebab-case');
-  else ok(`panel.id ${panel.id}`);
-  if (typeof panel.icon !== 'string' || !/^[a-z0-9-]+$/.test(panel.icon)) fail('panel.icon must be a Remixicon kebab name');
-  else ok(`panel.icon ${panel.icon} (Remixicon name, no file needed)`);
-  if (panel.icon?.endsWith('.svg')) fail('panel.icon is an .svg path, but no icon file ships');
+  if (!/^[a-z][a-z0-9-]*$/.test(manifest.id ?? '')) fail('openchamber.id is not kebab-case');
+  else ok(`openchamber.id ${manifest.id}`);
+  if (typeof manifest.name !== 'string' || manifest.name.trim().length === 0) fail('openchamber.name is empty');
+  else ok(`openchamber.name ${manifest.name}`);
+  if (typeof manifest.icon !== 'string' || !/^[a-z0-9-]+$/.test(manifest.icon)) fail('openchamber.icon must be a Remixicon kebab name');
+  else ok(`openchamber.icon ${manifest.icon} (Remixicon name, no file needed)`);
+  if (manifest.icon?.endsWith('.svg')) fail('openchamber.icon is an .svg path, but no icon file ships');
 
   const entries = [
     ['panel.entry', panel.entry],

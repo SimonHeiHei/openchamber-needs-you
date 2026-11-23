@@ -33,11 +33,11 @@
     "engines": {
       "openchamber": ">=2.3.3"
     },
+    "id": "needs-you",
+    "name": "Needs You",
+    "icon": "radar",
     "contributes": {
       "panel": {
-        "id": "needs-you",
-        "name": "Needs You",
-        "icon": "radar",
         "entry": "panel/index.html",
         "mobile": true
       },
