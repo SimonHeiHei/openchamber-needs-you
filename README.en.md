@@ -2,7 +2,7 @@
 
 An [OpenChamber](https://openchamber.dev) extension that compresses the dozens of background sessions across ~20 projects into one question: **which one is waiting on me right now?**
 
-The category is already validated: vibe-kanban (28.8k★) and claude-squad (8.8k★) both manage attention across agent sessions, but each only sees the agents it started. The Needs You only reads the sessions OpenChamber is already running — no second runtime.
+The Needs You only reads the sessions OpenChamber is already running — no second runtime.
 
 [中文](README.md) · English
 
@@ -26,27 +26,27 @@ v1 is **read-only**: clicking a row opens that session (`openSession`). Nothing 
 
 The host gives two orthogonal fields: `activity` (what is happening now) and `outcome` (how the last turn ended). The Needs You folds them into 8 drawable states, redundant in shape + colour + text:
 
-| State | Shape | Colour | Trigger |
-|---|---|---|---|
-| Permission / Question | filled dot + expanding halo | amber | `waiting-permission` / `waiting-question` |
-| Failed | **rounded square** | red | `outcome: failed`, not running |
-| Retrying | filled dot + spinning gap arc | blue | `retrying` |
-| Running | filled dot + breathing ring | blue | `running` |
-| Done | hollow ring | green | `idle` + `completed` |
-| Idle | hollow ring at 60% | grey | `idle`, no outcome |
-| Unknown | dashed ring | grey | `unknown` (never counted) |
-| Archived | 6px hollow ring, 60% opacity | grey | `archivedAt != null`, only in the board's Archived tab |
+| State                 | Shape                         | Colour | Trigger                                                  |
+| --------------------- | ----------------------------- | ------ | -------------------------------------------------------- |
+| Permission / Question | filled dot + expanding halo   | amber  | `waiting-permission` / `waiting-question`            |
+| Failed                | **rounded square**      | red    | `outcome: failed`, not running                         |
+| Retrying              | filled dot + spinning gap arc | blue   | `retrying`                                             |
+| Running               | filled dot + breathing ring   | blue   | `running`                                              |
+| Done                  | hollow ring                   | green  | `idle` + `completed`                                 |
+| Idle                  | hollow ring at 60%            | grey   | `idle`, no outcome                                     |
+| Unknown               | dashed ring                   | grey   | `unknown` (never counted)                              |
+| Archived              | 6px hollow ring, 60% opacity  | grey   | `archivedAt != null`, only in the board's Archived tab |
 
 Failures never count as "waiting on you": nobody is waiting for a reply on `PR #42`; it just needs a look. Adding the two would make the badge and the summary disagree.
 
 ## Requirements
 
-| | |
-|---|---|
-| OpenChamber | **2.3.3 or newer** (the manifest `engines` floor). Older hosts refuse with `host-too-old`. |
-| Platform | Web and desktop. On a phone the panel becomes a workspace tab (`panel.mobile: true`); the Work Status strip shows where the host supports it. |
-| VS Code | **Does not load extensions.** |
-| Dependencies | None. No local service, no runtime npm dependency, no network request. |
+|              |                                                                                                                                                 |
+| ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| OpenChamber  | **2.3.3 or newer** (the manifest `engines` floor). Older hosts refuse with `host-too-old`.                                            |
+| Platform     | Web and desktop. On a phone the panel becomes a workspace tab (`panel.mobile: true`); the Work Status strip shows where the host supports it. |
+| VS Code      | **Does not load extensions.**                                                                                                             |
+| Dependencies | None. No local service, no runtime npm dependency, no network request.                                                                          |
 
 ## Install
 
@@ -119,27 +119,16 @@ status/src/main.ts    Work Status strip (its own iframe, same store)
 
 ## Troubleshooting
 
-| Symptom | Cause / fix |
-|---|---|
-| Panel says "Sessions permission is not approved" | `NOT_GRANTED`. Approve `sessions` again in Settings → Extensions, then reopen. |
-| Yellow banner "Could not read N projects" | Some `onSessions` subscriptions were refused or timed out. The queue keeps its last data; press Retry. Counts may be low on purpose — it never pretends nothing is waiting. |
-| Stuck on "Reading…" | The host has not pushed a project snapshot yet. Check OpenChamber ≥ 2.3.3 and that the extension is enabled. |
-| No entry in VS Code or an old version | Extensions load on web and desktop only; VS Code is unsupported, and hosts below the `engines` floor refuse to install. |
-| Badge number differs from the panel total | Expected. The badge counts new waits; the panel counts all waits. Opening the panel clears the badge; failures never count. |
-| A project shows "not connected" | Beyond the 31-project subscription budget, or you swapped it out. Use Manage / Swap in; a project with waiting sessions cannot be swapped out. |
-| There is no "open board" button in the panel | Host limit: pages open only from the sidebar's Pages menu; `openSurface` cannot open `page`. A button that does nothing is worse than none. |
-| Code changed but the UI did not | Folder installs need `npm run build`; Git installs need a higher `version` and a reinstall. |
-
-## Roadmap
-
-| Version | Capability | Status |
-|---|---|---|
-| v1.1 | Opening a failed session marks it read (local `cr.seen.failed`, 7-day expiry); running rows show the current tool target | Not implemented |
-| v2 | Start a session in a worktree (row menu below a separator / project card `+`), subscribing `onWorktrees` per project only then | Not implemented |
-| v2 | Page "by project / by state" segmented view | Not implemented |
-| v3 | Answer permissions and questions in place (row expands into the request) | Not implemented; the host does not expose request content or reply actions yet |
-
-v1 already leaves the space: the 24px action slot at the right of a blocked row, the empty spot at the right of a project card header, and the separator in the row menu.
+| Symptom                                          | Cause / fix                                                                                                                                                                    |
+| ------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Panel says "Sessions permission is not approved" | `NOT_GRANTED`. Approve `sessions` again in Settings → Extensions, then reopen.                                                                                            |
+| Yellow banner "Could not read N projects"        | Some `onSessions` subscriptions were refused or timed out. The queue keeps its last data; press Retry. Counts may be low on purpose — it never pretends nothing is waiting. |
+| Stuck on "Reading…"                             | The host has not pushed a project snapshot yet. Check OpenChamber ≥ 2.3.3 and that the extension is enabled.                                                                  |
+| No entry in VS Code or an old version            | Extensions load on web and desktop only; VS Code is unsupported, and hosts below the `engines` floor refuse to install.                                                      |
+| Badge number differs from the panel total        | Expected. The badge counts new waits; the panel counts all waits. Opening the panel clears the badge; failures never count.                                                    |
+| A project shows "not connected"                  | Beyond the 31-project subscription budget, or you swapped it out. Use Manage / Swap in; a project with waiting sessions cannot be swapped out.                                 |
+| There is no "open board" button in the panel     | Host limit: pages open only from the sidebar's Pages menu;`openSurface` cannot open `page`. A button that does nothing is worse than none.                                 |
+| Code changed but the UI did not                  | Folder installs need `npm run build`; Git installs need a higher `version` and a reinstall.                                                                                |
 
 ## License
 
