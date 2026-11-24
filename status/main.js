@@ -3590,7 +3590,22 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
   styleEl.textContent = BASE_STYLE + STATUS_STYLE;
   document.head.append(styleEl);
   root.className = "status-root";
-  var store = new ControlRoomStore(host, "status");
+  var storeHost = new Proxy(host, {
+    get(target, property, receiver) {
+      if (property === "setBadge") return async () => void 0;
+      const value = Reflect.get(target, property, receiver);
+      return typeof value === "function" ? value.bind(target) : value;
+    }
+  });
+  var store = new ControlRoomStore(storeHost, "status");
+  var lastBadge;
+  var syncBadge = (view) => {
+    if (view.fatal || view.phase !== "ready" || !view.hasData) return;
+    const next = view.counts.blocked > 0 ? Math.min(view.counts.blocked, 999) : null;
+    if (next === lastBadge) return;
+    lastBadge = next;
+    void host.setBadge(next).catch(() => void 0);
+  };
   var strip = createStrip(
     () => {
       void host.openSurface(PANEL_SURFACE_ID).catch(() => void 0);
@@ -3602,7 +3617,9 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
   root.append(strip.element);
   var render = () => {
     document.title = t().panel.title;
-    strip.update(store.run());
+    const view = store.run();
+    strip.update(view);
+    syncBadge(view);
   };
   store.onChange(render);
   render();
@@ -3619,6 +3636,6 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
     void store.start();
   });
   document.addEventListener("visibilitychange", () => {
-    if (!document.hidden) store.run();
+    if (!document.hidden) syncBadge(store.run());
   });
 })();
