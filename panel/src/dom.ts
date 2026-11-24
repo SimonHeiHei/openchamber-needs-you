@@ -2,6 +2,7 @@
 import type { GuestProject } from '@openchamber/sdk';
 import { mountSpinner } from '@openchamber/sdk/ui';
 import type { Group, Row, StateName, View } from './store';
+import { WAIT_ESCALATION_MS } from './store';
 import { formatClock, formatDuration, formatWait, metaFor, t } from './strings';
 
 export const el = <K extends keyof HTMLElementTagNameMap>(
@@ -119,7 +120,7 @@ const monogram = (name: string): string => {
 const metaText = (row: Row): string =>
   metaFor(row.state, row.waitedMs, row.updatedAt, row.archivedAt);
 
-const waitAge = (row: Row): boolean => row.waitedMs >= 30 * 60_000;
+const waitAge = (row: Row): boolean => row.waitedMs >= WAIT_ESCALATION_MS;
 
 /** The row's meta cell: waited time for blocked, duration or clock for the rest. */
 const paintMeta = (node: HTMLElement, row: Row): void => {
@@ -185,6 +186,9 @@ export function createPanelRow(
     element.dataset.state = item.state;
     element.title = item.title;
     dot.dataset.state = item.state;
+    const hotWait = (item.state === 'permission' || item.state === 'question') && item.waitedMs >= WAIT_ESCALATION_MS;
+    if (hotWait) dot.dataset.hot = '1';
+    else delete dot.dataset.hot;
     title.textContent = '';
     if (opts.search && item.child) title.append(el('span', 'child-mark', '↳'));
     title.append(document.createTextNode(item.title));
@@ -280,6 +284,9 @@ export function createNeedCard(row: Row): NeedCard {
   element.dataset.id = row.id;
   element.dataset.key = row.id;
   element.title = row.title;
+  if ((row.state === 'permission' || row.state === 'question') && row.waitedMs >= WAIT_ESCALATION_MS) {
+    element.dataset.hot = '1';
+  }
   toneVars(tone, element);
 
   const pill = el('span', 'cr-pill', strings.state[row.state]);
@@ -328,8 +335,9 @@ export function createProjectCard(input: ProjectCardInput): HTMLElement {
   section.dataset.projectId = project.id;
   section.dataset.collapsed = input.collapsed ? 'true' : 'false';
 
-  const head = el('button', 'pchead');
-  head.type = 'button';
+  const head = el('div', 'pchead');
+  head.setAttribute('role', 'button');
+  head.tabIndex = 0;
   head.setAttribute('aria-expanded', input.collapsed ? 'false' : 'true');
   head.dataset.card = project.id;
   const mono = el('span', 'pmono', monogram(project.name));
@@ -353,6 +361,14 @@ export function createProjectCard(input: ProjectCardInput): HTMLElement {
     chip.dataset.chip = `${project.id}:running`;
     toneVars('info', chip);
     head.append(chip);
+  }
+  if (!input.error && input.items.length > 0) {
+    const add = el('button', 'padd', '+');
+    add.type = 'button';
+    add.dataset.newSession = project.id;
+    add.setAttribute('aria-label', strings.board.newSession);
+    add.title = strings.board.newSession;
+    head.append(add);
   }
   head.append(el('i', 'tri'));
   section.append(head);

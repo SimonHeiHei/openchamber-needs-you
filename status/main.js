@@ -2032,423 +2032,9 @@ ${GUEST_UI_LOOK_CSS}`;
     };
   };
 
-  // panel/src/strings.ts
-  var zh = {
-    lang: "zh",
-    join: "\uFF0C",
-    sep: "\xB7",
-    unit: { blocked: "\u4E2A\u5728\u7B49\u4F60", running: "\u4E2A\u5728\u8FD0\u884C", failed: "\u4E2A\u5931\u8D25", sessions: "\u4E2A\u4F1A\u8BDD", projects: "\u4E2A\u9879\u76EE" },
-    state: {
-      permission: "\u6743\u9650",
-      question: "\u63D0\u95EE",
-      failed: "\u5931\u8D25",
-      retrying: "\u91CD\u8BD5\u4E2D",
-      running: "\u8FD0\u884C\u4E2D",
-      done: "\u5DF2\u5B8C\u6210",
-      idle: "\u7A7A\u95F2",
-      unknown: "\u672A\u77E5",
-      archived: "\u5DF2\u5F52\u6863"
-    },
-    panel: {
-      title: "\u9700\u8981\u4F60",
-      summary: {
-        blocked: (n) => `${n} \u4E2A\u5728\u7B49\u4F60`,
-        running: (n) => `${n} \u4E2A\u5728\u8FD0\u884C`,
-        failed: (n) => `${n} \u4E2A\u5931\u8D25`,
-        loading: "\u6B63\u5728\u8BFB\u53D6\u2026"
-      },
-      search: {
-        open: "\u641C\u7D22\u4F1A\u8BDD",
-        placeholder: "\u641C\u7D22\u4F1A\u8BDD\u6216\u9879\u76EE",
-        results: (query, n) => `\u641C\u7D22\u300C${query}\u300D\xB7 ${n} \u4E2A\u7ED3\u679C`,
-        empty: "\u6CA1\u6709\u5339\u914D\u7684\u4F1A\u8BDD"
-      },
-      more: "\u66F4\u591A\u64CD\u4F5C",
-      expandGroup: "\u5C55\u5F00\u5B50\u4F1A\u8BDD",
-      collapseGroup: "\u6536\u8D77\u5B50\u4F1A\u8BDD",
-      clearWaiting: "\u6CA1\u6709\u4F1A\u8BDD\u5728\u7B49\u4F60",
-      goodNews: {
-        title: "\u6CA1\u6709\u4F1A\u8BDD\u9700\u8981\u4F60",
-        body: (running) => `${running} \u4E2A\u4F1A\u8BDD\u5728\u540E\u53F0\u8FD0\u884C\uFF0C\u6709\u7ED3\u679C\u4F1A\u51FA\u73B0\u5728\u8FD9\u91CC\u3002`,
-        quiet: "\u6CA1\u6709\u6B63\u5728\u8FD0\u884C\u7684\u4F1A\u8BDD\u3002",
-        ended: (n, time) => `${n} \u4E2A\u5DF2\u5B8C\u6210 \xB7 ${time}`
-      },
-      live: (title, state) => `\u65B0\u7684\u7B49\u5F85\uFF1A${title}\uFF0C${state}`
-    },
-    section: {
-      waiting: "\u7B49\u4F60",
-      failed: "\u5931\u8D25",
-      running: "\u8FDB\u884C\u4E2D",
-      ended: "\u5DF2\u7ED3\u675F",
-      archived: "\u5DF2\u5F52\u6863",
-      more: (n) => `\u8FD8\u6709 ${n} \u6761`,
-      endedToggle: (n) => `\u5DF2\u7ED3\u675F ${n}`
-    },
-    footer: {
-      idle: (n) => `\u53E6\u6709 ${n} \u4E2A\u7A7A\u95F2\u4F1A\u8BDD`,
-      totals: (projects, sessions) => `${projects} \u4E2A\u9879\u76EE \xB7 ${sessions} \u4E2A\u4F1A\u8BDD`,
-      updated: (time) => `\u66F4\u65B0\u4E8E ${time}`,
-      updating: "\u6B63\u5728\u66F4\u65B0",
-      stale: (time) => `\u663E\u793A\u7684\u662F ${time} \u7684\u7ED3\u679C`
-    },
-    time: {
-      now: "\u521A\u521A",
-      minutes: (n) => `${n} \u5206`,
-      hours: (n) => `${n} \u5C0F\u65F6`,
-      days: (n) => `${n} \u5929`,
-      waiting: (duration) => `\u7B49\u4E86 ${duration}`
-    },
-    aria: {
-      row: (title, state, project, waited) => `${title}\uFF0C${state}\uFF0C\u9879\u76EE ${project}${waited ? `\uFF0C\u5DF2\u7B49\u5F85 ${waited}` : ""}`,
-      section: (label, n) => `${label}\uFF0C${n} \u4E2A\u4F1A\u8BDD`
-    },
-    board: {
-      heading: "\u4F1A\u8BDD\u770B\u677F",
-      updated: (time) => `\u66F4\u65B0\u4E8E ${time}`,
-      updating: "\u66F4\u65B0\u4E2D\u2026",
-      summary: (blocked, failed, running, sessions) => `${blocked} \u4E2A\u5728\u7B49\u4F60 \xB7 ${failed} \u4E2A\u5931\u8D25 \xB7 ${running} \u4E2A\u5728\u8FD0\u884C \xB7 ${sessions} \u4E2A\u4F1A\u8BDD`,
-      needsYou: (n) => `\u9700\u8981\u4F60 ${n}`,
-      needsMeta: (blocked, failed) => `${blocked} \u4E2A\u5728\u7B49\u4F60 \xB7 ${failed} \u4E2A\u5931\u8D25`,
-      meta: (sessions, projects) => `${sessions} \u4E2A\u4F1A\u8BDD \xB7 ${projects} \u4E2A\u9879\u76EE`,
-      column: (n) => `${n} \u4E2A\u4F1A\u8BDD`,
-      otherProjects: (projects, sessions) => `\u5176\u4ED6 ${projects} \u4E2A\u9879\u76EE \xB7 ${sessions} \u4E2A\u4F1A\u8BDD`,
-      archived: (n) => `\u5DF2\u5F52\u6863 ${n}`,
-      projectEmpty: "\u8FD9\u4E2A\u9879\u76EE\u6CA1\u6709\u4F1A\u8BDD",
-      projectError: "\u8BFB\u53D6\u5931\u8D25",
-      noMatch: "\u6CA1\u6709\u5339\u914D\u7684\u4F1A\u8BDD",
-      clearFilter: "\u6E05\u9664\u7B5B\u9009",
-      openSession: "\u6253\u5F00 \u2192",
-      filters: { all: "\u5168\u90E8", needs: "\u9700\u8981\u4F60", running: "\u8FDB\u884C\u4E2D", ended: "\u5DF2\u7ED3\u675F", archived: "\u5DF2\u5F52\u6863" },
-      search: "\u641C\u7D22\u4F1A\u8BDD\u6216\u9879\u76EE",
-      hideArchived: "\u5F52\u6863\u4F1A\u8BDD\u4E0D\u8FDB\u5165\u961F\u5217",
-      chip: { blocked: (n) => `\u7B49\u4F60 ${n}`, failed: (n) => `\u5931\u8D25 ${n}`, running: (n) => `\u8FD0\u884C ${n}` },
-      archivedLink: (n) => `\u5DF2\u5F52\u6863 ${n}`,
-      moreSessions: (n) => `\u8FD8\u6709 ${n} \u4E2A\u4F1A\u8BDD`,
-      moreRows: (n) => `\u8FD8\u6709 ${n} \u4E2A`,
-      showAll: "\u663E\u793A\u5168\u90E8",
-      fewerSessions: "\u6536\u8D77"
-    },
-    action: {
-      open: "\u6253\u5F00\u4F1A\u8BDD",
-      copyTitle: "\u590D\u5236\u6807\u9898",
-      copyPath: "\u590D\u5236\u9879\u76EE\u8DEF\u5F84",
-      copyDone: "\u5DF2\u590D\u5236",
-      sheetTitle: "\u66F4\u591A\u64CD\u4F5C"
-    },
-    status: {
-      blocked: (n) => `${n} \u4E2A\u4F1A\u8BDD\u5728\u7B49\u4F60`,
-      detail: (counts) => [
-        counts.permissions ? `${counts.permissions} \u4E2A\u6743\u9650` : "",
-        counts.questions ? `${counts.questions} \u4E2A\u63D0\u95EE` : "",
-        counts.inflight ? `${counts.inflight} \u4E2A\u8FD0\u884C\u4E2D` : "",
-        counts.failed ? `${counts.failed} \u4E2A\u5931\u8D25` : ""
-      ].filter(Boolean).join(" \xB7 "),
-      clear: "\u6CA1\u6709\u4F1A\u8BDD\u5728\u7B49\u4F60",
-      clearDetail: (running, failed) => [running ? `${running} \u4E2A\u8FD0\u884C\u4E2D` : "", failed ? `${failed} \u4E2A\u5931\u8D25` : ""].filter(Boolean).join(" \xB7 "),
-      runningCount: (n) => `${n} \u4E2A\u8FD0\u884C\u4E2D`,
-      failedCount: (n) => `${n} \u4E2A\u5931\u8D25`,
-      empty: "\u8FD8\u6CA1\u6709\u4F1A\u8BDD",
-      open: "\u6253\u5F00\u63A7\u5236\u5BA4 \u2192",
-      partial: (n) => `\xB7 ${n} \u4E2A\u9879\u76EE\u672A\u8BFB\u5230`,
-      reading: "\u6B63\u5728\u8BFB\u53D6\u2026",
-      error: "\u8BFB\u4E0D\u5230\u4F1A\u8BDD\u72B6\u6001"
-    },
-    error: {
-      partialTitle: (n) => `${n} \u4E2A\u9879\u76EE\u8BFB\u53D6\u5931\u8D25`,
-      partialBody: "\u53EF\u80FD\u6F0F\u6389\u7B49\u5F85\u4E2D\u7684\u4F1A\u8BDD\uFF0C\u5176\u4F59\u9879\u76EE\u4ECD\u662F\u6700\u65B0\u3002",
-      allTitle: "\u8BFB\u4E0D\u5230\u4F1A\u8BDD\u72B6\u6001",
-      allBody: "\u663E\u793A\u7684\u662F\u4E0A\u6B21\u7ED3\u679C\u3002",
-      retry: "\u91CD\u8BD5",
-      stale: (time) => `\u66F4\u65B0\u4E8E ${time} \xB7 \u8BFB\u53D6\u5931\u8D25`,
-      notGrantedTitle: "\u6269\u5C55\u6743\u9650\u672A\u6279\u51C6",
-      notGrantedBody: "\u8FD9\u4E2A\u6269\u5C55\u53EA\u7533\u8BF7 sessions \u80FD\u529B\u3002\u8BF7\u5728 \u8BBE\u7F6E \u2192 \u6269\u5C55 \u91CC\u91CD\u65B0\u6279\u51C6\u540E\u6253\u5F00\u3002",
-      disabledTitle: "\u6269\u5C55\u5DF2\u6682\u505C",
-      disabledBody: "\u5728 \u8BBE\u7F6E \u2192 \u6269\u5C55 \u91CC\u91CD\u65B0\u542F\u7528\u5B83\uFF0C\u961F\u5217\u5C31\u4F1A\u7EE7\u7EED\u66F4\u65B0\u3002",
-      unavailableTitle: "\u8FDE\u4E0D\u4E0A OpenChamber",
-      unavailableBody: "\u8FD9\u4E2A\u754C\u9762\u9700\u8981\u8FD0\u884C\u5728 OpenChamber \u7684 web \u6216\u684C\u9762\u7AEF\u91CC\u3002"
-    },
-    overflow: {
-      title: (n) => `\u8FD8\u6709 ${n} \u4E2A\u9879\u76EE\u672A\u8FDE\u63A5`,
-      body: "\u4E00\u6B21\u6700\u591A\u8FDE\u63A5 31 \u4E2A\u9879\u76EE\uFF0C\u6362\u4E00\u4E2A\u4E0A\u6765\u3002",
-      manage: "\u7BA1\u7406",
-      blocked: "\u5148\u5904\u7406\u5B8C\u7B49\u5F85\u4E2D\u7684\u4F1A\u8BDD\u518D\u6362\u51FA",
-      unconnected: (n) => `${n} \u4E2A\u9879\u76EE\u672A\u8FDE\u63A5`,
-      connect: "\u6362\u5165",
-      connected: "\u5DF2\u8FDE\u63A5"
-    },
-    empty: {
-      noProjectsTitle: "\u8FD8\u6CA1\u6709\u9879\u76EE",
-      noProjectsBody: "\u5728 OpenChamber \u91CC\u6253\u5F00\u4E00\u4E2A\u9879\u76EE\uFF0C\u4F1A\u8BDD\u5C31\u4F1A\u51FA\u73B0\u5728\u8FD9\u91CC\u3002",
-      noSessionsTitle: "\u8FD8\u6CA1\u6709\u4F1A\u8BDD",
-      noSessionsBody: "\u5728\u4EFB\u610F\u9879\u76EE\u91CC\u5F00\u59CB\u4E00\u4E2A\u4F1A\u8BDD\uFF0C\u5B83\u5C31\u4F1A\u51FA\u73B0\u5728\u8FD9\u6761\u961F\u5217\u91CC\u3002"
-    },
-    misc: { wt: "wt", retry: "\u91CD\u8BD5", updated: "\u66F4\u65B0\u4E8E" }
-  };
-  var en = {
-    lang: "en",
-    join: ", ",
-    sep: "\xB7",
-    unit: { blocked: "waiting on you", running: "running", failed: "failed", sessions: "sessions", projects: "projects" },
-    state: {
-      permission: "Permission",
-      question: "Question",
-      failed: "Failed",
-      retrying: "Retrying",
-      running: "Running",
-      done: "Done",
-      idle: "Idle",
-      unknown: "Unknown",
-      archived: "Archived"
-    },
-    panel: {
-      title: "Needs You",
-      summary: {
-        blocked: (n) => `${n} waiting on you`,
-        running: (n) => `${n} running`,
-        failed: (n) => `${n} failed`,
-        loading: "Reading\u2026"
-      },
-      search: {
-        open: "Search sessions",
-        placeholder: "Search sessions or projects",
-        results: (query, n) => `\u201C${query}\u201D \xB7 ${n} results`,
-        empty: "No matching sessions"
-      },
-      more: "More actions",
-      expandGroup: "Expand sub-sessions",
-      collapseGroup: "Collapse sub-sessions",
-      clearWaiting: "Nothing is waiting on you",
-      goodNews: {
-        title: "Nothing needs you",
-        body: (running) => `${running} sessions are running in the background. Results land here.`,
-        quiet: "Nothing is running right now.",
-        ended: (n, time) => `${n} done \xB7 ${time}`
-      },
-      live: (title, state) => `New wait: ${title}, ${state}`
-    },
-    section: {
-      waiting: "Waiting on you",
-      failed: "Failed",
-      running: "In flight",
-      ended: "Ended",
-      archived: "Archived",
-      more: (n) => `${n} more`,
-      endedToggle: (n) => `Ended ${n}`
-    },
-    footer: {
-      idle: (n) => `${n} idle sessions`,
-      totals: (projects, sessions) => `${projects} projects \xB7 ${sessions} sessions`,
-      updated: (time) => `Updated ${time}`,
-      updating: "updating",
-      stale: (time) => `Showing the ${time} result`
-    },
-    time: {
-      now: "now",
-      minutes: (n) => `${n}m`,
-      hours: (n) => `${n}h`,
-      days: (n) => `${n}d`,
-      waiting: (duration) => `waiting ${duration}`
-    },
-    aria: {
-      row: (title, state, project, waited) => `${title}, ${state}, project ${project}${waited ? `, waiting for ${waited}` : ""}`,
-      section: (label, n) => `${label}, ${n} sessions`
-    },
-    board: {
-      heading: "Session board",
-      updated: (time) => `Updated ${time}`,
-      updating: "updating\u2026",
-      summary: (blocked, failed, running, sessions) => `${blocked} waiting \xB7 ${failed} failed \xB7 ${running} running \xB7 ${sessions} sessions`,
-      needsYou: (n) => `Needs you ${n}`,
-      needsMeta: (blocked, failed) => `${blocked} waiting \xB7 ${failed} failed`,
-      meta: (sessions, projects) => `${sessions} sessions \xB7 ${projects} projects`,
-      column: (n) => `${n} sessions`,
-      otherProjects: (projects, sessions) => `${projects} more projects \xB7 ${sessions} sessions`,
-      archived: (n) => `${n} archived`,
-      projectEmpty: "No sessions in this project",
-      projectError: "Could not read",
-      noMatch: "No matching sessions",
-      clearFilter: "Clear filters",
-      openSession: "Open \u2192",
-      filters: { all: "All", needs: "Needs you", running: "In flight", ended: "Ended", archived: "Archived" },
-      search: "Search sessions or projects",
-      hideArchived: "Archived sessions stay out of the queue",
-      chip: { blocked: (n) => `${n} waiting`, failed: (n) => `${n} failed`, running: (n) => `${n} running` },
-      archivedLink: (n) => `${n} archived`,
-      moreSessions: (n) => `${n} more sessions`,
-      moreRows: (n) => `${n} more`,
-      showAll: "Show all",
-      fewerSessions: "Show fewer"
-    },
-    action: {
-      open: "Open session",
-      copyTitle: "Copy title",
-      copyPath: "Copy project path",
-      copyDone: "Copied",
-      sheetTitle: "More actions"
-    },
-    status: {
-      blocked: (n) => `${n} ${n === 1 ? "session" : "sessions"} waiting on you`,
-      detail: (counts) => [
-        counts.permissions ? `${counts.permissions} permission` : "",
-        counts.questions ? `${counts.questions} question` : "",
-        counts.inflight ? `${counts.inflight} running` : "",
-        counts.failed ? `${counts.failed} failed` : ""
-      ].filter(Boolean).join(" \xB7 "),
-      clear: "Nothing is waiting on you",
-      clearDetail: (running, failed) => [running ? `${running} running` : "", failed ? `${failed} failed` : ""].filter(Boolean).join(" \xB7 "),
-      runningCount: (n) => `${n} running`,
-      failedCount: (n) => `${n} failed`,
-      empty: "No sessions yet",
-      open: "Open control room \u2192",
-      partial: (n) => `\xB7 ${n} projects unread`,
-      reading: "Reading\u2026",
-      error: "Cannot read session state"
-    },
-    error: {
-      partialTitle: (n) => `Could not read ${n} projects`,
-      partialBody: "Some waits may be missing. The rest is up to date.",
-      allTitle: "Cannot read session state",
-      allBody: "Showing the last result.",
-      retry: "Retry",
-      stale: (time) => `Updated ${time} \xB7 read failed`,
-      notGrantedTitle: "Sessions permission is not approved",
-      notGrantedBody: "This extension asks for sessions only. Approve it again in Settings \u2192 Extensions.",
-      disabledTitle: "Extension paused",
-      disabledBody: "Enable it again in Settings \u2192 Extensions and the queue resumes.",
-      unavailableTitle: "Cannot reach OpenChamber",
-      unavailableBody: "This view runs inside OpenChamber on web or desktop."
-    },
-    overflow: {
-      title: (n) => `${n} more projects not connected`,
-      body: "Up to 31 projects at a time. Swap one in.",
-      manage: "Manage",
-      blocked: "Clear waiting sessions first",
-      unconnected: (n) => `${n} projects not connected`,
-      connect: "Swap in",
-      connected: "Connected"
-    },
-    empty: {
-      noProjectsTitle: "No projects yet",
-      noProjectsBody: "Open a project in OpenChamber and its sessions show up here.",
-      noSessionsTitle: "No sessions yet",
-      noSessionsBody: "Start a session in any project and it lands in this queue."
-    },
-    misc: { wt: "wt", retry: "Retry", updated: "Updated" }
-  };
-  var TABLE = { zh, en };
-  var current = en;
-  var currentLang = "en";
-  function setLocale(locale) {
-    const next = (locale ?? "").toLowerCase().startsWith("zh") ? "zh" : "en";
-    current = TABLE[next];
-    currentLang = next;
-    return next;
-  }
-  var t = () => current;
-
-  // panel/src/dom.ts
-  var el2 = (tag, className = "", text = "", children = []) => {
-    const node = document.createElement(tag);
-    if (className) node.className = className;
-    if (text) node.textContent = text;
-    if (children.length > 0) node.append(...children);
-    return node;
-  };
-  var setText2 = (node, text) => {
-    if (node.textContent !== text) node.textContent = text;
-  };
-  function createStrip(onOpen, onRetry) {
-    const strings = t();
-    let spinner = null;
-    const element = el2("div", "strip");
-    element.setAttribute("role", "button");
-    element.tabIndex = 0;
-    const dotSlot = el2("span", "dot-slot");
-    const dot = el2("span", "cr-dot");
-    dot.setAttribute("aria-hidden", "true");
-    dotSlot.append(dot);
-    const title = el2("span", "strip-title");
-    const sub = el2("span", "strip-sub");
-    const open = el2("span", "strip-open", strings.status.open);
-    const main = el2("span", "strip-main", "", [title, sub]);
-    element.append(dotSlot, main, open);
-    element.addEventListener("click", onOpen);
-    element.addEventListener("keydown", (event) => {
-      if (event.key === "Enter" || event.key === " ") {
-        event.preventDefault();
-        onOpen();
-      }
-    });
-    const update = (view) => {
-      const strings2 = t();
-      delete element.dataset.tone;
-      delete element.dataset.variant;
-      element.removeAttribute("aria-busy");
-      spinner?.dispose();
-      spinner = null;
-      dotSlot.textContent = "";
-      sub.textContent = "";
-      open.textContent = "";
-      setText2(open, strings2.status.open);
-      if (!view.fatal && view.phase !== "error" && (!view.hasData || view.counts.sessions === 0 && !view.sessionsLoaded)) {
-        element.setAttribute("aria-busy", "true");
-        const dotSkeleton = el2("span", "sk dot");
-        dotSlot.append(dotSkeleton);
-        title.textContent = "";
-        title.append(el2("span", "sk t1"), el2("span", "sk t2"));
-        open.textContent = "";
-        spinner = mountSpinner(open, { size: "sm" });
-        return;
-      }
-      if (view.fatal || view.phase === "error") {
-        dotSlot.append(dot);
-        dot.dataset.state = "unknown";
-        setText2(title, strings2.status.error);
-        const retry = el2("button", "text-btn", strings2.error.retry);
-        retry.type = "button";
-        retry.style.color = "var(--oc-warning-text)";
-        retry.style.marginLeft = "6px";
-        retry.addEventListener("click", (event) => {
-          event.stopPropagation();
-          onRetry();
-        });
-        if (view.hasData) sub.append(el2("span", "", strings2.error.allBody));
-        sub.append(retry);
-        return;
-      }
-      dotSlot.append(dot);
-      if (view.counts.sessions === 0 && view.phase === "ready") {
-        dot.dataset.state = "idle";
-        element.dataset.variant = "clear";
-        setText2(title, strings2.status.empty);
-        setText2(sub, view.counts.projects === 0 ? strings2.empty.noProjectsBody : "");
-        return;
-      }
-      if (view.counts.blocked > 0) {
-        element.dataset.tone = "warn";
-        dot.dataset.state = "permission";
-        setText2(title, strings2.status.blocked(view.counts.blocked));
-        const detail = strings2.status.detail(view.counts);
-        const partial2 = view.errorProjects.length ? ` ${strings2.status.partial(view.errorProjects.length)}` : "";
-        setText2(sub, detail + partial2);
-        return;
-      }
-      dot.dataset.state = "done";
-      element.dataset.variant = "clear";
-      setText2(title, strings2.status.clear);
-      const partial = view.errorProjects.length ? ` ${strings2.status.partial(view.errorProjects.length)}` : "";
-      if (view.counts.inflight) sub.append(el2("span", "", strings2.status.runningCount(view.counts.inflight)));
-      if (view.counts.failed) {
-        if (sub.textContent) sub.append(el2("span", "", ` ${strings2.sep} `));
-        sub.append(el2("span", "b-err", strings2.status.failedCount(view.counts.failed)));
-      }
-      if (partial) sub.append(el2("span", "", partial));
-    };
-    return { element, update };
-  }
-
   // panel/src/store.ts
   var MAX_SUBSCRIPTIONS = 31;
+  var WAIT_ESCALATION_MS = 15 * 6e4;
   var SEEN_KEY = "cr.seen";
   var SEEN_LIMIT = 200;
   var SUBS_KEY = "cr.subs";
@@ -2511,12 +2097,17 @@ ${GUEST_UI_LOOK_CSS}`;
     initialComplete = false;
     currentBlocked = [];
     started = false;
+    hydrated = false;
     disposed = false;
     collapsed = { ended: false, projects: [], groups: [] };
-    board = { tab: "all", query: "" };
+    board = { tab: "all", query: "", others: false };
     changeHandler = null;
     onChange(handler) {
       this.changeHandler = handler;
+    }
+    /** Storage (board filter, search, folds) has been read. */
+    isHydrated() {
+      return this.hydrated;
     }
     changed() {
       this.changeHandler?.();
@@ -2550,7 +2141,8 @@ ${GUEST_UI_LOOK_CSS}`;
         const value = board.value;
         this.board = {
           tab: typeof value.tab === "string" ? value.tab : "all",
-          query: typeof value.query === "string" ? value.query.slice(0, 200) : ""
+          query: typeof value.query === "string" ? value.query.slice(0, 200) : "",
+          others: value.others === true
         };
       }
     }
@@ -2592,6 +2184,7 @@ ${GUEST_UI_LOOK_CSS}`;
       if (this.started) return;
       this.started = true;
       await this.loadStorage();
+      this.hydrated = true;
       this.changed();
       try {
         const unsub = await this.host.onProjects((snapshot) => this.applyProjects(snapshot));
@@ -2978,6 +2571,427 @@ ${GUEST_UI_LOOK_CSS}`;
     }
   };
 
+  // panel/src/strings.ts
+  var zh = {
+    lang: "zh",
+    join: "\uFF0C",
+    sep: "\xB7",
+    unit: { blocked: "\u4E2A\u5728\u7B49\u4F60", running: "\u4E2A\u5728\u8FD0\u884C", failed: "\u4E2A\u5931\u8D25", sessions: "\u4E2A\u4F1A\u8BDD", projects: "\u4E2A\u9879\u76EE" },
+    state: {
+      permission: "\u6743\u9650",
+      question: "\u63D0\u95EE",
+      failed: "\u5931\u8D25",
+      retrying: "\u91CD\u8BD5\u4E2D",
+      running: "\u8FD0\u884C\u4E2D",
+      done: "\u5DF2\u5B8C\u6210",
+      idle: "\u7A7A\u95F2",
+      unknown: "\u672A\u77E5",
+      archived: "\u5DF2\u5F52\u6863"
+    },
+    panel: {
+      title: "\u9700\u8981\u4F60",
+      summary: {
+        blocked: (n) => `${n} \u4E2A\u5728\u7B49\u4F60`,
+        running: (n) => `${n} \u4E2A\u5728\u8FD0\u884C`,
+        failed: (n) => `${n} \u4E2A\u5931\u8D25`,
+        loading: "\u6B63\u5728\u8BFB\u53D6\u2026"
+      },
+      search: {
+        open: "\u641C\u7D22\u4F1A\u8BDD",
+        placeholder: "\u641C\u7D22\u4F1A\u8BDD\u6216\u9879\u76EE",
+        results: (query, n) => `\u641C\u7D22\u300C${query}\u300D\xB7 ${n} \u4E2A\u7ED3\u679C`,
+        empty: "\u6CA1\u6709\u5339\u914D\u7684\u4F1A\u8BDD"
+      },
+      more: "\u66F4\u591A\u64CD\u4F5C",
+      expandGroup: "\u5C55\u5F00\u5B50\u4F1A\u8BDD",
+      collapseGroup: "\u6536\u8D77\u5B50\u4F1A\u8BDD",
+      clearWaiting: "\u6CA1\u6709\u4F1A\u8BDD\u5728\u7B49\u4F60",
+      goodNews: {
+        title: "\u6CA1\u6709\u4F1A\u8BDD\u9700\u8981\u4F60",
+        body: (running) => `${running} \u4E2A\u4F1A\u8BDD\u5728\u540E\u53F0\u8FD0\u884C\uFF0C\u6709\u7ED3\u679C\u4F1A\u51FA\u73B0\u5728\u8FD9\u91CC\u3002`,
+        quiet: "\u6CA1\u6709\u6B63\u5728\u8FD0\u884C\u7684\u4F1A\u8BDD\u3002",
+        ended: (n, time) => `${n} \u4E2A\u5DF2\u5B8C\u6210 \xB7 ${time}`
+      },
+      live: (title, state) => `\u65B0\u7684\u7B49\u5F85\uFF1A${title}\uFF0C${state}`
+    },
+    section: {
+      waiting: "\u7B49\u4F60",
+      failed: "\u5931\u8D25",
+      running: "\u8FDB\u884C\u4E2D",
+      ended: "\u5DF2\u7ED3\u675F",
+      archived: "\u5DF2\u5F52\u6863",
+      more: (n) => `\u8FD8\u6709 ${n} \u6761`,
+      endedToggle: (n) => `\u5DF2\u7ED3\u675F ${n}`
+    },
+    footer: {
+      idle: (n) => `\u53E6\u6709 ${n} \u4E2A\u7A7A\u95F2\u4F1A\u8BDD`,
+      totals: (projects, sessions) => `${projects} \u4E2A\u9879\u76EE \xB7 ${sessions} \u4E2A\u4F1A\u8BDD`,
+      updated: (time) => `\u66F4\u65B0\u4E8E ${time}`,
+      updating: "\u6B63\u5728\u66F4\u65B0",
+      stale: (time) => `\u663E\u793A\u7684\u662F ${time} \u7684\u7ED3\u679C`
+    },
+    time: {
+      now: "\u521A\u521A",
+      minutes: (n) => `${n} \u5206`,
+      hours: (n) => `${n} \u5C0F\u65F6`,
+      days: (n) => `${n} \u5929`,
+      waiting: (duration) => `\u7B49\u4E86 ${duration}`
+    },
+    aria: {
+      row: (title, state, project, waited) => `${title}\uFF0C${state}\uFF0C\u9879\u76EE ${project}${waited ? `\uFF0C\u5DF2\u7B49\u5F85 ${waited}` : ""}`,
+      section: (label, n) => `${label}\uFF0C${n} \u4E2A\u4F1A\u8BDD`
+    },
+    board: {
+      heading: "\u4F1A\u8BDD\u770B\u677F",
+      updated: (time) => `\u66F4\u65B0\u4E8E ${time}`,
+      updating: "\u66F4\u65B0\u4E2D\u2026",
+      summary: (blocked, failed, running, sessions) => `${blocked} \u4E2A\u5728\u7B49\u4F60 \xB7 ${failed} \u4E2A\u5931\u8D25 \xB7 ${running} \u4E2A\u5728\u8FD0\u884C \xB7 ${sessions} \u4E2A\u4F1A\u8BDD`,
+      needsYou: (n) => `\u9700\u8981\u4F60 ${n}`,
+      needsMeta: (blocked, failed) => `${blocked} \u4E2A\u5728\u7B49\u4F60 \xB7 ${failed} \u4E2A\u5931\u8D25`,
+      meta: (sessions, projects) => `${sessions} \u4E2A\u4F1A\u8BDD \xB7 ${projects} \u4E2A\u9879\u76EE`,
+      column: (n) => `${n} \u4E2A\u4F1A\u8BDD`,
+      otherProjects: (projects, sessions) => `\u5176\u4ED6 ${projects} \u4E2A\u9879\u76EE \xB7 ${sessions} \u4E2A\u4F1A\u8BDD`,
+      archived: (n) => `\u5DF2\u5F52\u6863 ${n}`,
+      projectEmpty: "\u8FD9\u4E2A\u9879\u76EE\u6CA1\u6709\u4F1A\u8BDD",
+      projectError: "\u8BFB\u53D6\u5931\u8D25",
+      noMatch: "\u6CA1\u6709\u5339\u914D\u7684\u4F1A\u8BDD",
+      clearFilter: "\u6E05\u9664\u7B5B\u9009",
+      openSession: "\u6253\u5F00 \u2192",
+      filters: { all: "\u5168\u90E8", needs: "\u9700\u8981\u4F60", running: "\u8FDB\u884C\u4E2D", ended: "\u5DF2\u7ED3\u675F", archived: "\u5DF2\u5F52\u6863" },
+      search: "\u641C\u7D22\u4F1A\u8BDD\u6216\u9879\u76EE",
+      hideArchived: "\u5F52\u6863\u4F1A\u8BDD\u4E0D\u8FDB\u5165\u961F\u5217",
+      chip: { blocked: (n) => `\u7B49\u4F60 ${n}`, failed: (n) => `\u5931\u8D25 ${n}`, running: (n) => `\u8FD0\u884C ${n}` },
+      archivedLink: (n) => `\u5DF2\u5F52\u6863 ${n}`,
+      moreSessions: (n) => `\u8FD8\u6709 ${n} \u4E2A\u4F1A\u8BDD`,
+      moreRows: (n) => `\u8FD8\u6709 ${n} \u4E2A`,
+      showAll: "\u663E\u793A\u5168\u90E8",
+      fewerSessions: "\u6536\u8D77",
+      newSession: "\u65B0\u5EFA\u4F1A\u8BDD",
+      newSessionTitle: "\u65B0\u4F1A\u8BDD",
+      newSessionFailed: "\u65B0\u5EFA\u4F1A\u8BDD\u5931\u8D25\uFF0C\u8BF7\u91CD\u8BD5"
+    },
+    action: {
+      open: "\u6253\u5F00\u4F1A\u8BDD",
+      copyTitle: "\u590D\u5236\u6807\u9898",
+      copyPath: "\u590D\u5236\u9879\u76EE\u8DEF\u5F84",
+      copyDone: "\u5DF2\u590D\u5236",
+      sheetTitle: "\u66F4\u591A\u64CD\u4F5C"
+    },
+    status: {
+      blocked: (n) => `${n} \u4E2A\u4F1A\u8BDD\u5728\u7B49\u4F60`,
+      detail: (counts) => [
+        counts.permissions ? `${counts.permissions} \u4E2A\u6743\u9650` : "",
+        counts.questions ? `${counts.questions} \u4E2A\u63D0\u95EE` : "",
+        counts.inflight ? `${counts.inflight} \u4E2A\u8FD0\u884C\u4E2D` : "",
+        counts.failed ? `${counts.failed} \u4E2A\u5931\u8D25` : ""
+      ].filter(Boolean).join(" \xB7 "),
+      clear: "\u6CA1\u6709\u4F1A\u8BDD\u5728\u7B49\u4F60",
+      clearDetail: (running, failed) => [running ? `${running} \u4E2A\u8FD0\u884C\u4E2D` : "", failed ? `${failed} \u4E2A\u5931\u8D25` : ""].filter(Boolean).join(" \xB7 "),
+      runningCount: (n) => `${n} \u4E2A\u8FD0\u884C\u4E2D`,
+      failedCount: (n) => `${n} \u4E2A\u5931\u8D25`,
+      empty: "\u8FD8\u6CA1\u6709\u4F1A\u8BDD",
+      open: "\u6253\u5F00\u63A7\u5236\u5BA4 \u2192",
+      partial: (n) => `\xB7 ${n} \u4E2A\u9879\u76EE\u672A\u8BFB\u5230`,
+      reading: "\u6B63\u5728\u8BFB\u53D6\u2026",
+      error: "\u8BFB\u4E0D\u5230\u4F1A\u8BDD\u72B6\u6001"
+    },
+    error: {
+      partialTitle: (n) => `${n} \u4E2A\u9879\u76EE\u8BFB\u53D6\u5931\u8D25`,
+      partialBody: "\u53EF\u80FD\u6F0F\u6389\u7B49\u5F85\u4E2D\u7684\u4F1A\u8BDD\uFF0C\u5176\u4F59\u9879\u76EE\u4ECD\u662F\u6700\u65B0\u3002",
+      allTitle: "\u8BFB\u4E0D\u5230\u4F1A\u8BDD\u72B6\u6001",
+      allBody: "\u663E\u793A\u7684\u662F\u4E0A\u6B21\u7ED3\u679C\u3002",
+      retry: "\u91CD\u8BD5",
+      stale: (time) => `\u66F4\u65B0\u4E8E ${time} \xB7 \u8BFB\u53D6\u5931\u8D25`,
+      notGrantedTitle: "\u6269\u5C55\u6743\u9650\u672A\u6279\u51C6",
+      notGrantedBody: "\u8FD9\u4E2A\u6269\u5C55\u53EA\u7533\u8BF7 sessions \u80FD\u529B\u3002\u8BF7\u5728 \u8BBE\u7F6E \u2192 \u6269\u5C55 \u91CC\u91CD\u65B0\u6279\u51C6\u540E\u6253\u5F00\u3002",
+      disabledTitle: "\u6269\u5C55\u5DF2\u6682\u505C",
+      disabledBody: "\u5728 \u8BBE\u7F6E \u2192 \u6269\u5C55 \u91CC\u91CD\u65B0\u542F\u7528\u5B83\uFF0C\u961F\u5217\u5C31\u4F1A\u7EE7\u7EED\u66F4\u65B0\u3002",
+      unavailableTitle: "\u8FDE\u4E0D\u4E0A OpenChamber",
+      unavailableBody: "\u8FD9\u4E2A\u754C\u9762\u9700\u8981\u8FD0\u884C\u5728 OpenChamber \u7684 web \u6216\u684C\u9762\u7AEF\u91CC\u3002"
+    },
+    overflow: {
+      title: (n) => `\u8FD8\u6709 ${n} \u4E2A\u9879\u76EE\u672A\u8FDE\u63A5`,
+      body: "\u4E00\u6B21\u6700\u591A\u8FDE\u63A5 31 \u4E2A\u9879\u76EE\uFF0C\u6362\u4E00\u4E2A\u4E0A\u6765\u3002",
+      manage: "\u7BA1\u7406",
+      blocked: "\u5148\u5904\u7406\u5B8C\u7B49\u5F85\u4E2D\u7684\u4F1A\u8BDD\u518D\u6362\u51FA",
+      unconnected: (n) => `${n} \u4E2A\u9879\u76EE\u672A\u8FDE\u63A5`,
+      connect: "\u6362\u5165",
+      connected: "\u5DF2\u8FDE\u63A5"
+    },
+    empty: {
+      noProjectsTitle: "\u8FD8\u6CA1\u6709\u9879\u76EE",
+      noProjectsBody: "\u5728 OpenChamber \u91CC\u6253\u5F00\u4E00\u4E2A\u9879\u76EE\uFF0C\u4F1A\u8BDD\u5C31\u4F1A\u51FA\u73B0\u5728\u8FD9\u91CC\u3002",
+      noSessionsTitle: "\u8FD8\u6CA1\u6709\u4F1A\u8BDD",
+      noSessionsBody: "\u5728\u4EFB\u610F\u9879\u76EE\u91CC\u5F00\u59CB\u4E00\u4E2A\u4F1A\u8BDD\uFF0C\u5B83\u5C31\u4F1A\u51FA\u73B0\u5728\u8FD9\u6761\u961F\u5217\u91CC\u3002"
+    },
+    misc: { wt: "wt", retry: "\u91CD\u8BD5", updated: "\u66F4\u65B0\u4E8E" }
+  };
+  var en = {
+    lang: "en",
+    join: ", ",
+    sep: "\xB7",
+    unit: { blocked: "waiting on you", running: "running", failed: "failed", sessions: "sessions", projects: "projects" },
+    state: {
+      permission: "Permission",
+      question: "Question",
+      failed: "Failed",
+      retrying: "Retrying",
+      running: "Running",
+      done: "Done",
+      idle: "Idle",
+      unknown: "Unknown",
+      archived: "Archived"
+    },
+    panel: {
+      title: "Needs You",
+      summary: {
+        blocked: (n) => `${n} waiting on you`,
+        running: (n) => `${n} running`,
+        failed: (n) => `${n} failed`,
+        loading: "Reading\u2026"
+      },
+      search: {
+        open: "Search sessions",
+        placeholder: "Search sessions or projects",
+        results: (query, n) => `\u201C${query}\u201D \xB7 ${n} results`,
+        empty: "No matching sessions"
+      },
+      more: "More actions",
+      expandGroup: "Expand sub-sessions",
+      collapseGroup: "Collapse sub-sessions",
+      clearWaiting: "Nothing is waiting on you",
+      goodNews: {
+        title: "Nothing needs you",
+        body: (running) => `${running} sessions are running in the background. Results land here.`,
+        quiet: "Nothing is running right now.",
+        ended: (n, time) => `${n} done \xB7 ${time}`
+      },
+      live: (title, state) => `New wait: ${title}, ${state}`
+    },
+    section: {
+      waiting: "Waiting on you",
+      failed: "Failed",
+      running: "In flight",
+      ended: "Ended",
+      archived: "Archived",
+      more: (n) => `${n} more`,
+      endedToggle: (n) => `Ended ${n}`
+    },
+    footer: {
+      idle: (n) => `${n} idle sessions`,
+      totals: (projects, sessions) => `${projects} projects \xB7 ${sessions} sessions`,
+      updated: (time) => `Updated ${time}`,
+      updating: "updating",
+      stale: (time) => `Showing the ${time} result`
+    },
+    time: {
+      now: "now",
+      minutes: (n) => `${n}m`,
+      hours: (n) => `${n}h`,
+      days: (n) => `${n}d`,
+      waiting: (duration) => `waiting ${duration}`
+    },
+    aria: {
+      row: (title, state, project, waited) => `${title}, ${state}, project ${project}${waited ? `, waiting for ${waited}` : ""}`,
+      section: (label, n) => `${label}, ${n} sessions`
+    },
+    board: {
+      heading: "Session board",
+      updated: (time) => `Updated ${time}`,
+      updating: "updating\u2026",
+      summary: (blocked, failed, running, sessions) => `${blocked} waiting \xB7 ${failed} failed \xB7 ${running} running \xB7 ${sessions} sessions`,
+      needsYou: (n) => `Needs you ${n}`,
+      needsMeta: (blocked, failed) => `${blocked} waiting \xB7 ${failed} failed`,
+      meta: (sessions, projects) => `${sessions} sessions \xB7 ${projects} projects`,
+      column: (n) => `${n} sessions`,
+      otherProjects: (projects, sessions) => `${projects} more projects \xB7 ${sessions} sessions`,
+      archived: (n) => `${n} archived`,
+      projectEmpty: "No sessions in this project",
+      projectError: "Could not read",
+      noMatch: "No matching sessions",
+      clearFilter: "Clear filters",
+      openSession: "Open \u2192",
+      filters: { all: "All", needs: "Needs you", running: "In flight", ended: "Ended", archived: "Archived" },
+      search: "Search sessions or projects",
+      hideArchived: "Archived sessions stay out of the queue",
+      chip: { blocked: (n) => `${n} waiting`, failed: (n) => `${n} failed`, running: (n) => `${n} running` },
+      archivedLink: (n) => `${n} archived`,
+      moreSessions: (n) => `${n} more sessions`,
+      moreRows: (n) => `${n} more`,
+      showAll: "Show all",
+      fewerSessions: "Show fewer",
+      newSession: "New session",
+      newSessionTitle: "New session",
+      newSessionFailed: "Could not start a session"
+    },
+    action: {
+      open: "Open session",
+      copyTitle: "Copy title",
+      copyPath: "Copy project path",
+      copyDone: "Copied",
+      sheetTitle: "More actions"
+    },
+    status: {
+      blocked: (n) => `${n} ${n === 1 ? "session" : "sessions"} waiting on you`,
+      detail: (counts) => [
+        counts.permissions ? `${counts.permissions} permission` : "",
+        counts.questions ? `${counts.questions} question` : "",
+        counts.inflight ? `${counts.inflight} running` : "",
+        counts.failed ? `${counts.failed} failed` : ""
+      ].filter(Boolean).join(" \xB7 "),
+      clear: "Nothing is waiting on you",
+      clearDetail: (running, failed) => [running ? `${running} running` : "", failed ? `${failed} failed` : ""].filter(Boolean).join(" \xB7 "),
+      runningCount: (n) => `${n} running`,
+      failedCount: (n) => `${n} failed`,
+      empty: "No sessions yet",
+      open: "Open control room \u2192",
+      partial: (n) => `\xB7 ${n} projects unread`,
+      reading: "Reading\u2026",
+      error: "Cannot read session state"
+    },
+    error: {
+      partialTitle: (n) => `Could not read ${n} projects`,
+      partialBody: "Some waits may be missing. The rest is up to date.",
+      allTitle: "Cannot read session state",
+      allBody: "Showing the last result.",
+      retry: "Retry",
+      stale: (time) => `Updated ${time} \xB7 read failed`,
+      notGrantedTitle: "Sessions permission is not approved",
+      notGrantedBody: "This extension asks for sessions only. Approve it again in Settings \u2192 Extensions.",
+      disabledTitle: "Extension paused",
+      disabledBody: "Enable it again in Settings \u2192 Extensions and the queue resumes.",
+      unavailableTitle: "Cannot reach OpenChamber",
+      unavailableBody: "This view runs inside OpenChamber on web or desktop."
+    },
+    overflow: {
+      title: (n) => `${n} more projects not connected`,
+      body: "Up to 31 projects at a time. Swap one in.",
+      manage: "Manage",
+      blocked: "Clear waiting sessions first",
+      unconnected: (n) => `${n} projects not connected`,
+      connect: "Swap in",
+      connected: "Connected"
+    },
+    empty: {
+      noProjectsTitle: "No projects yet",
+      noProjectsBody: "Open a project in OpenChamber and its sessions show up here.",
+      noSessionsTitle: "No sessions yet",
+      noSessionsBody: "Start a session in any project and it lands in this queue."
+    },
+    misc: { wt: "wt", retry: "Retry", updated: "Updated" }
+  };
+  var TABLE = { zh, en };
+  var current = en;
+  var currentLang = "en";
+  function setLocale(locale) {
+    const next = (locale ?? "").toLowerCase().startsWith("zh") ? "zh" : "en";
+    current = TABLE[next];
+    currentLang = next;
+    return next;
+  }
+  var t = () => current;
+
+  // panel/src/dom.ts
+  var el2 = (tag, className = "", text = "", children = []) => {
+    const node = document.createElement(tag);
+    if (className) node.className = className;
+    if (text) node.textContent = text;
+    if (children.length > 0) node.append(...children);
+    return node;
+  };
+  var setText2 = (node, text) => {
+    if (node.textContent !== text) node.textContent = text;
+  };
+  function createStrip(onOpen, onRetry) {
+    const strings = t();
+    let spinner = null;
+    const element = el2("div", "strip");
+    element.setAttribute("role", "button");
+    element.tabIndex = 0;
+    const dotSlot = el2("span", "dot-slot");
+    const dot = el2("span", "cr-dot");
+    dot.setAttribute("aria-hidden", "true");
+    dotSlot.append(dot);
+    const title = el2("span", "strip-title");
+    const sub = el2("span", "strip-sub");
+    const open = el2("span", "strip-open", strings.status.open);
+    const main = el2("span", "strip-main", "", [title, sub]);
+    element.append(dotSlot, main, open);
+    element.addEventListener("click", onOpen);
+    element.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        onOpen();
+      }
+    });
+    const update = (view) => {
+      const strings2 = t();
+      delete element.dataset.tone;
+      delete element.dataset.variant;
+      element.removeAttribute("aria-busy");
+      spinner?.dispose();
+      spinner = null;
+      dotSlot.textContent = "";
+      sub.textContent = "";
+      open.textContent = "";
+      setText2(open, strings2.status.open);
+      if (!view.fatal && view.phase !== "error" && (!view.hasData || view.counts.sessions === 0 && !view.sessionsLoaded)) {
+        element.setAttribute("aria-busy", "true");
+        const dotSkeleton = el2("span", "sk dot");
+        dotSlot.append(dotSkeleton);
+        title.textContent = "";
+        title.append(el2("span", "sk t1"), el2("span", "sk t2"));
+        open.textContent = "";
+        spinner = mountSpinner(open, { size: "sm" });
+        return;
+      }
+      if (view.fatal || view.phase === "error") {
+        dotSlot.append(dot);
+        dot.dataset.state = "unknown";
+        setText2(title, strings2.status.error);
+        const retry = el2("button", "text-btn", strings2.error.retry);
+        retry.type = "button";
+        retry.style.color = "var(--oc-warning-text)";
+        retry.style.marginLeft = "6px";
+        retry.addEventListener("click", (event) => {
+          event.stopPropagation();
+          onRetry();
+        });
+        if (view.hasData) sub.append(el2("span", "", strings2.error.allBody));
+        sub.append(retry);
+        return;
+      }
+      dotSlot.append(dot);
+      if (view.counts.sessions === 0 && view.phase === "ready") {
+        dot.dataset.state = "idle";
+        element.dataset.variant = "clear";
+        setText2(title, strings2.status.empty);
+        setText2(sub, view.counts.projects === 0 ? strings2.empty.noProjectsBody : "");
+        return;
+      }
+      if (view.counts.blocked > 0) {
+        element.dataset.tone = "warn";
+        dot.dataset.state = "permission";
+        setText2(title, strings2.status.blocked(view.counts.blocked));
+        const detail = strings2.status.detail(view.counts);
+        const partial2 = view.errorProjects.length ? ` ${strings2.status.partial(view.errorProjects.length)}` : "";
+        setText2(sub, detail + partial2);
+        return;
+      }
+      dot.dataset.state = "done";
+      element.dataset.variant = "clear";
+      setText2(title, strings2.status.clear);
+      const partial = view.errorProjects.length ? ` ${strings2.status.partial(view.errorProjects.length)}` : "";
+      if (view.counts.inflight) sub.append(el2("span", "", strings2.status.runningCount(view.counts.inflight)));
+      if (view.counts.failed) {
+        if (sub.textContent) sub.append(el2("span", "", ` ${strings2.sep} `));
+        sub.append(el2("span", "b-err", strings2.status.failedCount(view.counts.failed)));
+      }
+      if (partial) sub.append(el2("span", "", partial));
+    };
+    return { element, update };
+  }
+
   // panel/src/style.ts
   var BASE_STYLE = String.raw`
 *, *::before, *::after { box-sizing: border-box; }
@@ -3031,6 +3045,17 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 .cr-dot[data-state="idle"] { background: transparent; border: 1.5px solid color-mix(in srgb, var(--oc-muted) 60%, transparent); }
 .cr-dot[data-state="unknown"] { background: transparent; border: 1px dashed var(--oc-muted); }
 .cr-dot[data-state="archived"] { width: 6px; height: 6px; background: transparent; border: 1.5px solid var(--oc-muted); }
+/* waiting past the one threshold: a slower, quieter ring than the fresh halo */
+.cr-dot[data-hot="1"]::after { animation: none; opacity: .25; }
+.cr-dot[data-hot="1"]::before {
+  content: ""; position: absolute; inset: -4px; border-radius: 50%;
+  border: 1px solid color-mix(in srgb, var(--oc-warning) 38%, transparent);
+  animation: cr-waitpulse 3.4s ease-in-out infinite;
+}
+@keyframes cr-waitpulse {
+  0%, 100% { opacity: .18; transform: scale(.96) }
+  50% { opacity: .55; transform: scale(1.08) }
+}
 
 @keyframes cr-halo { 0% { transform: scale(.9); opacity: .5 } 70% { transform: scale(1.9); opacity: 0 } 100% { opacity: 0 } }
 @keyframes cr-breathe { 0%, 100% { opacity: .3 } 50% { opacity: .8 } }
@@ -3376,6 +3401,16 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 .nc-branch { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: var(--oc-mono); }
 .nc-open { margin-left: auto; color: color-mix(in srgb, var(--oc-fg) 82%, transparent); white-space: nowrap; }
 .ncard:hover .nc-open, .ncard:focus-visible .nc-open { color: var(--oc-fg); }
+.ncard[data-hot="1"] .nc-wait { color: var(--oc-warning-text); font-weight: 600; }
+.ncard[data-hot="1"]::after {
+  content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+  border: 1px solid color-mix(in srgb, var(--oc-warning) 32%, transparent);
+  animation: cr-cardwait 3.4s ease-in-out infinite;
+}
+@keyframes cr-cardwait {
+  0%, 100% { opacity: .22 }
+  50% { opacity: .58 }
+}
 .railcards .calm { font-size: 11px; color: var(--oc-muted); padding: 8px 2px 12px; }
 
 /* ---------- board ---------- */
@@ -3388,7 +3423,8 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
   transition: background 150ms var(--ease);
 }
 .pcard:hover { background: color-mix(in srgb, var(--oc-fg) 4.8%, transparent); }
-.pchead { display: flex; align-items: center; gap: 5px; padding: 2px 4px 5px; width: 100%; text-align: left; }
+.pchead { display: flex; align-items: center; gap: 5px; padding: 2px 4px 5px; width: 100%; text-align: left; cursor: pointer; border-radius: 4px; }
+.pchead:focus-visible { background: var(--oc-hover); }
 .pname { flex: 1; min-width: 0; font-size: 12px; font-weight: 600; letter-spacing: -.005em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .pmono {
   flex: none; width: 20px; height: 20px; border-radius: 5px;
@@ -3398,6 +3434,12 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
   color: var(--tone-text, var(--oc-fg));
 }
 .pchead .tri { margin-left: 2px; color: var(--oc-muted); transition: transform 200ms var(--ease); }
+.padd {
+  flex: none; width: 20px; height: 20px; border-radius: 4px; display: grid; place-items: center;
+  color: var(--oc-muted); font-size: 14px; line-height: 1;
+  transition: color var(--d-feedback) var(--ease), background var(--d-feedback) var(--ease);
+}
+.padd:hover, .padd:focus-visible { color: var(--oc-fg); background: var(--oc-hover); }
 .pchead[aria-expanded="true"] .tri { transform: rotate(90deg); }
 .chipb {
   flex: none; font-size: 10px; font-weight: 500; line-height: 16px; padding: 0 5px;
@@ -3551,6 +3593,8 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
   .halo.run { animation: haloFade 600ms ease-out forwards; }
   .bdot[data-state="retrying"]::after { animation: none; opacity: .7; }
   .brow.land, .chipb.pop { animation: none; }
+  .cr-dot[data-hot="1"]::before, .ncard[data-hot="1"]::after { animation: none; opacity: .45; }
+  .padd { transition: none; }
 }
 `;
   var STATUS_STYLE = String.raw`
@@ -3626,7 +3670,7 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
   var started = false;
   host.onReady((ctx) => {
     applyHostReady(ctx, document.documentElement);
-    setLocale(ctx.locale);
+    setLocale((ctx.locale || "").trim() || navigator.language);
     if (ctx.device) {
       document.documentElement.style.setProperty("--safe-bottom", `${Math.max(0, ctx.device.insets.bottom)}px`);
     }

@@ -99,6 +99,11 @@ export type View = {
 };
 
 export const MAX_SUBSCRIPTIONS = 31;
+/**
+ * The one escalation threshold in the extension: a blocked session that has
+ * been waiting this long stops being "fresh" and gets the louder treatment.
+ */
+export const WAIT_ESCALATION_MS = 15 * 60_000;
 const SEEN_KEY = 'cr.seen';
 const SEEN_LIMIT = 200;
 const SUBS_KEY = 'cr.subs';
@@ -117,7 +122,7 @@ type Entry = {
 type StoredSeen = { ids?: unknown; at?: unknown };
 type StoredSubs = { dropped?: unknown };
 export type CollapsedState = { ended: boolean; projects: string[]; /** expanded parent session ids */ groups: string[] };
-export type BoardState = { tab: string; query: string };
+export type BoardState = { tab: string; query: string; others: boolean };
 
 const isBlockedState = (state: StateName): boolean =>
   state === 'permission' || state === 'question';
@@ -190,10 +195,11 @@ export class ControlRoomStore {
   private initialComplete = false;
   private currentBlocked: string[] = [];
   private started = false;
+  private hydrated = false;
   private disposed = false;
 
   private collapsed: CollapsedState = { ended: false, projects: [], groups: [] };
-  private board: BoardState = { tab: 'all', query: '' };
+  private board: BoardState = { tab: 'all', query: '', others: false };
 
   private changeHandler: (() => void) | null = null;
 
@@ -204,6 +210,11 @@ export class ControlRoomStore {
 
   onChange(handler: () => void): void {
     this.changeHandler = handler;
+  }
+
+  /** Storage (board filter, search, folds) has been read. */
+  isHydrated(): boolean {
+    return this.hydrated;
   }
 
   private changed(): void {
@@ -242,6 +253,7 @@ export class ControlRoomStore {
       this.board = {
         tab: typeof value.tab === 'string' ? value.tab : 'all',
         query: typeof value.query === 'string' ? value.query.slice(0, 200) : '',
+        others: value.others === true,
       };
     }
   }
@@ -292,6 +304,7 @@ export class ControlRoomStore {
     if (this.started) return;
     this.started = true;
     await this.loadStorage();
+    this.hydrated = true;
     this.changed();
     try {
       const unsub = await this.host.onProjects((snapshot) => this.applyProjects(snapshot));

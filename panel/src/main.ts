@@ -787,9 +787,9 @@ function mountPage(): void {
   const saved = store.getBoard();
   let filter: Filter = (order as string[]).includes(saved.tab) ? (saved.tab as Filter) : 'all';
   let query = saved.query;
-  let othersOpen = false;
+  let othersOpen = saved.others;
   let unconnectedOpen = false;
-  let phoneSeeded = false;
+  let storageHydrated = false;
   const CARD_ROW_LIMIT = 6;
   const cardShowAll = new Set<string>();
   const pageGroups = new Map<string, Group>();
@@ -976,15 +976,6 @@ function mountPage(): void {
 
     const primary = visible.slice(0, 16);
     const extra = visible.slice(16);
-    const firstBlockedId = visible.find((project) => countsFor(view, project.id).blocked > 0)?.id;
-    if (isTouch() && !phoneSeeded) {
-      phoneSeeded = true;
-      for (const project of visible) {
-        if (project.id !== firstBlockedId && !store.getCollapsed().projects.includes(project.id)) {
-          store.toggleProjectCollapsed(project.id);
-        }
-      }
-    }
 
     pageGroups.clear();
     for (const group of view.groups) pageGroups.set(group.head.id, group);
@@ -1085,6 +1076,7 @@ function mountPage(): void {
       otherButton.append(dom.el('span', '', stringsNow.board.otherProjects(rest.length, restSessions)), dom.el('i', 'tri'));
       otherButton.addEventListener('click', () => {
         othersOpen = !othersOpen;
+        store.setBoard({ others: othersOpen });
         render();
       });
       boardFoot.append(otherButton);
@@ -1095,8 +1087,8 @@ function mountPage(): void {
       archived.type = 'button';
       archived.addEventListener('click', () => {
         filter = 'archived';
-        store.setBoard({ tab: 'archived' });
         othersOpen = false;
+        store.setBoard({ tab: 'archived', others: false });
         pendingFlip.cards = true;
         pendingIndicator = true;
         render();
@@ -1270,6 +1262,14 @@ function mountPage(): void {
 
   const render = (): void => {
     const stringsNow = t();
+    if (!storageHydrated && store.isHydrated()) {
+      storageHydrated = true;
+      const restored = store.getBoard();
+      filter = (order as string[]).includes(restored.tab) ? (restored.tab as Filter) : 'all';
+      query = restored.query;
+      othersOpen = restored.others;
+      search.update({ value: query });
+    }
     const view = store.run();
     if (contentReady) page.classList.remove('boot');
     const previousStates = new Map(pageStates);
@@ -1435,6 +1435,22 @@ function mountPage(): void {
   render();
   void store.start();
 
+  const startNewSession = async (project: GuestProject): Promise<void> => {
+    try {
+      const result = await host.startSession({
+        providerId: 'needs-you',
+        id: `needs-you-${Date.now()}`,
+        title: t().board.newSessionTitle,
+        url: '',
+        projectId: project.id,
+        navigation: 'open',
+      });
+      if (result.sessionId === null) throw new Error(result.failure);
+    } catch {
+      void host.toast({ kind: 'error', message: t().board.newSessionFailed }).catch(() => undefined);
+    }
+  };
+
   startClock(() => refreshTimes(root!, store));
 
   const paused = (): void => {
@@ -1476,6 +1492,12 @@ function mountPage(): void {
   board.addEventListener('click', (event) => {
     const target = event.target as HTMLElement;
     if (target.closest('.b-twist')) return;
+    const newSession = target.closest<HTMLElement>('[data-new-session]');
+    if (newSession?.dataset.newSession) {
+      const project = store.allProjects().find((item) => item.id === newSession.dataset.newSession);
+      if (project) void startNewSession(project);
+      return;
+    }
     const cardMore = target.closest<HTMLElement>('[data-card-more]');
     if (cardMore?.dataset.cardMore) {
       const id = cardMore.dataset.cardMore;
@@ -1515,12 +1537,26 @@ function mountPage(): void {
   });
 
   board.addEventListener('keydown', (event) => {
-    const row = (event.target as HTMLElement).closest<HTMLElement>('.brow');
-    if (!row) return;
-    if (event.key === 'Enter' || event.key === ' ') {
+    if (event.key !== 'Enter' && event.key !== ' ') return;
+    const target = event.target as HTMLElement;
+    if (target.closest('.padd')) return;
+    const cardHead = target.closest<HTMLElement>('[data-card]');
+    if (cardHead?.dataset.card) {
       event.preventDefault();
-      if (row.dataset.id) openSession(row.dataset.id);
+      const id = cardHead.dataset.card;
+      toggleCollapsed(store, id);
+      const card = cardHead.closest<HTMLElement>('.pcard');
+      const body = card?.querySelector<HTMLElement>('.pcardbody');
+      const collapsed = store.getCollapsed().projects.includes(id);
+      cardHead.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+      if (body) body.dataset.collapsed = collapsed ? 'true' : 'false';
+      if (card) card.dataset.collapsed = collapsed ? 'true' : 'false';
+      return;
     }
+    const row = target.closest<HTMLElement>('.brow');
+    if (!row) return;
+    event.preventDefault();
+    if (row.dataset.id) openSession(row.dataset.id);
   });
 
   rail.addEventListener('click', (event) => {
@@ -1547,7 +1583,7 @@ let mountedSurface: 'panel' | 'page' | null = null;
 
 host.onReady((ctx) => {
   applyHostReady(ctx, document.documentElement);
-  setLocale(ctx.locale);
+  setLocale((ctx.locale || '').trim() || navigator.language);
   const device = ctx.device;
   if (device) {
     document.documentElement.style.setProperty('--safe-bottom', `${Math.max(0, device.insets.bottom)}px`);

@@ -52,6 +52,17 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 .cr-dot[data-state="idle"] { background: transparent; border: 1.5px solid color-mix(in srgb, var(--oc-muted) 60%, transparent); }
 .cr-dot[data-state="unknown"] { background: transparent; border: 1px dashed var(--oc-muted); }
 .cr-dot[data-state="archived"] { width: 6px; height: 6px; background: transparent; border: 1.5px solid var(--oc-muted); }
+/* waiting past the one threshold: a slower, quieter ring than the fresh halo */
+.cr-dot[data-hot="1"]::after { animation: none; opacity: .25; }
+.cr-dot[data-hot="1"]::before {
+  content: ""; position: absolute; inset: -4px; border-radius: 50%;
+  border: 1px solid color-mix(in srgb, var(--oc-warning) 38%, transparent);
+  animation: cr-waitpulse 3.4s ease-in-out infinite;
+}
+@keyframes cr-waitpulse {
+  0%, 100% { opacity: .18; transform: scale(.96) }
+  50% { opacity: .55; transform: scale(1.08) }
+}
 
 @keyframes cr-halo { 0% { transform: scale(.9); opacity: .5 } 70% { transform: scale(1.9); opacity: 0 } 100% { opacity: 0 } }
 @keyframes cr-breathe { 0%, 100% { opacity: .3 } 50% { opacity: .8 } }
@@ -399,6 +410,16 @@ export const PAGE_STYLE = String.raw`
 .nc-branch { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: var(--oc-mono); }
 .nc-open { margin-left: auto; color: color-mix(in srgb, var(--oc-fg) 82%, transparent); white-space: nowrap; }
 .ncard:hover .nc-open, .ncard:focus-visible .nc-open { color: var(--oc-fg); }
+.ncard[data-hot="1"] .nc-wait { color: var(--oc-warning-text); font-weight: 600; }
+.ncard[data-hot="1"]::after {
+  content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+  border: 1px solid color-mix(in srgb, var(--oc-warning) 32%, transparent);
+  animation: cr-cardwait 3.4s ease-in-out infinite;
+}
+@keyframes cr-cardwait {
+  0%, 100% { opacity: .22 }
+  50% { opacity: .58 }
+}
 .railcards .calm { font-size: 11px; color: var(--oc-muted); padding: 8px 2px 12px; }
 
 /* ---------- board ---------- */
@@ -411,7 +432,8 @@ export const PAGE_STYLE = String.raw`
   transition: background 150ms var(--ease);
 }
 .pcard:hover { background: color-mix(in srgb, var(--oc-fg) 4.8%, transparent); }
-.pchead { display: flex; align-items: center; gap: 5px; padding: 2px 4px 5px; width: 100%; text-align: left; }
+.pchead { display: flex; align-items: center; gap: 5px; padding: 2px 4px 5px; width: 100%; text-align: left; cursor: pointer; border-radius: 4px; }
+.pchead:focus-visible { background: var(--oc-hover); }
 .pname { flex: 1; min-width: 0; font-size: 12px; font-weight: 600; letter-spacing: -.005em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .pmono {
   flex: none; width: 20px; height: 20px; border-radius: 5px;
@@ -421,6 +443,12 @@ export const PAGE_STYLE = String.raw`
   color: var(--tone-text, var(--oc-fg));
 }
 .pchead .tri { margin-left: 2px; color: var(--oc-muted); transition: transform 200ms var(--ease); }
+.padd {
+  flex: none; width: 20px; height: 20px; border-radius: 4px; display: grid; place-items: center;
+  color: var(--oc-muted); font-size: 14px; line-height: 1;
+  transition: color var(--d-feedback) var(--ease), background var(--d-feedback) var(--ease);
+}
+.padd:hover, .padd:focus-visible { color: var(--oc-fg); background: var(--oc-hover); }
 .pchead[aria-expanded="true"] .tri { transform: rotate(90deg); }
 .chipb {
   flex: none; font-size: 10px; font-weight: 500; line-height: 16px; padding: 0 5px;
@@ -574,6 +602,8 @@ export const PAGE_STYLE = String.raw`
   .halo.run { animation: haloFade 600ms ease-out forwards; }
   .bdot[data-state="retrying"]::after { animation: none; opacity: .7; }
   .brow.land, .chipb.pop { animation: none; }
+  .cr-dot[data-hot="1"]::before, .ncard[data-hot="1"]::after { animation: none; opacity: .45; }
+  .padd { transition: none; }
 }
 `;
 

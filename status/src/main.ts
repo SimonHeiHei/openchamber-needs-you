@@ -64,7 +64,7 @@ render();
 let started = false;
 host.onReady((ctx) => {
   applyHostReady(ctx, document.documentElement);
-  setLocale(ctx.locale);
+  setLocale((ctx.locale || '').trim() || navigator.language);
   if (ctx.device) {
     document.documentElement.style.setProperty('--safe-bottom', `${Math.max(0, ctx.device.insets.bottom)}px`);
   }
