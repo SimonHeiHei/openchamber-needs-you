@@ -10,7 +10,6 @@
 
 ![侧栏面板：按紧急度排的队列](docs/screenshots/panel.png)
 ![全屏看板：按项目铺开](docs/screenshots/page.png)
-![Work Status 条](docs/screenshots/status.png)
 
 ## 它解决什么
 

@@ -10,7 +10,6 @@ The Needs You only reads the sessions OpenChamber is already running — no seco
 
 ![Rail panel: the queue, most urgent first](docs/screenshots/panel.png)
 ![Full page: the per-project board](docs/screenshots/page.png)
-![Work Status strip](docs/screenshots/status.png)
 
 ## What it does
 
