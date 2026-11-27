@@ -362,14 +362,6 @@ export function createProjectCard(input: ProjectCardInput): HTMLElement {
     toneVars('info', chip);
     head.append(chip);
   }
-  if (!input.error && input.items.length > 0) {
-    const add = el('button', 'padd', '+');
-    add.type = 'button';
-    add.dataset.newSession = project.id;
-    add.setAttribute('aria-label', strings.board.newSession);
-    add.title = strings.board.newSession;
-    head.append(add);
-  }
   head.append(el('i', 'tri'));
   section.append(head);
 

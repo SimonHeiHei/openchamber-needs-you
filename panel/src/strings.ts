@@ -64,9 +64,6 @@ export interface Strings {
     moreRows: (n: number) => string;
     showAll: string;
     fewerSessions: string;
-    newSession: string;
-    newSessionTitle: string;
-    newSessionFailed: string;
   };
   action: { open: string; copyTitle: string; copyPath: string; copyDone: string; sheetTitle: string };
   status: {
@@ -205,9 +202,6 @@ const zh: Strings = {
     moreRows: (n) => `还有 ${n} 个`,
     showAll: '显示全部',
     fewerSessions: '收起',
-    newSession: '新建会话',
-    newSessionTitle: '新会话',
-    newSessionFailed: '新建会话失败，请重试',
   },
   action: {
     open: '打开会话',
@@ -366,9 +360,6 @@ const en: Strings = {
     moreRows: (n) => `${n} more`,
     showAll: 'Show all',
     fewerSessions: 'Show fewer',
-    newSession: 'New session',
-    newSessionTitle: 'New session',
-    newSessionFailed: 'Could not start a session',
   },
   action: {
     open: 'Open session',

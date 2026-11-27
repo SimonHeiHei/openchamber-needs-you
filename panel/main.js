@@ -2871,10 +2871,7 @@ ${GUEST_UI_LOOK_CSS}`;
       moreSessions: (n) => `\u8FD8\u6709 ${n} \u4E2A\u4F1A\u8BDD`,
       moreRows: (n) => `\u8FD8\u6709 ${n} \u4E2A`,
       showAll: "\u663E\u793A\u5168\u90E8",
-      fewerSessions: "\u6536\u8D77",
-      newSession: "\u65B0\u5EFA\u4F1A\u8BDD",
-      newSessionTitle: "\u65B0\u4F1A\u8BDD",
-      newSessionFailed: "\u65B0\u5EFA\u4F1A\u8BDD\u5931\u8D25\uFF0C\u8BF7\u91CD\u8BD5"
+      fewerSessions: "\u6536\u8D77"
     },
     action: {
       open: "\u6253\u5F00\u4F1A\u8BDD",
@@ -3025,10 +3022,7 @@ ${GUEST_UI_LOOK_CSS}`;
       moreSessions: (n) => `${n} more sessions`,
       moreRows: (n) => `${n} more`,
       showAll: "Show all",
-      fewerSessions: "Show fewer",
-      newSession: "New session",
-      newSessionTitle: "New session",
-      newSessionFailed: "Could not start a session"
+      fewerSessions: "Show fewer"
     },
     action: {
       open: "Open session",
@@ -3374,14 +3368,6 @@ ${GUEST_UI_LOOK_CSS}`;
       chip.dataset.chip = `${project.id}:running`;
       toneVars("info", chip);
       head.append(chip);
-    }
-    if (!input.error && input.items.length > 0) {
-      const add = el2("button", "padd", "+");
-      add.type = "button";
-      add.dataset.newSession = project.id;
-      add.setAttribute("aria-label", strings.board.newSession);
-      add.title = strings.board.newSession;
-      head.append(add);
     }
     head.append(el2("i", "tri"));
     section.append(head);
@@ -4088,12 +4074,6 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
   color: var(--tone-text, var(--oc-fg));
 }
 .pchead .tri { margin-left: 2px; color: var(--oc-muted); transition: transform 200ms var(--ease); }
-.padd {
-  flex: none; width: 20px; height: 20px; border-radius: 4px; display: grid; place-items: center;
-  color: var(--oc-muted); font-size: 14px; line-height: 1;
-  transition: color var(--d-feedback) var(--ease), background var(--d-feedback) var(--ease);
-}
-.padd:hover, .padd:focus-visible { color: var(--oc-fg); background: var(--oc-hover); }
 .pchead[aria-expanded="true"] .tri { transform: rotate(90deg); }
 .chipb {
   flex: none; font-size: 10px; font-weight: 500; line-height: 16px; padding: 0 5px;
@@ -4248,7 +4228,6 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
   .bdot[data-state="retrying"]::after { animation: none; opacity: .7; }
   .brow.land, .chipb.pop { animation: none; }
   .cr-dot[data-hot="1"]::before, .ncard[data-hot="1"]::after { animation: none; opacity: .45; }
-  .padd { transition: none; }
 }
 `;
   var STATUS_STYLE = String.raw`
@@ -5536,21 +5515,6 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
     store.onChange(render);
     render();
     void store.start();
-    const startNewSession = async (project) => {
-      try {
-        const result = await host.startSession({
-          providerId: "needs-you",
-          id: `needs-you-${Date.now()}`,
-          title: t().board.newSessionTitle,
-          url: "",
-          projectId: project.id,
-          navigation: "open"
-        });
-        if (result.sessionId === null) throw new Error(result.failure);
-      } catch {
-        void host.toast({ kind: "error", message: t().board.newSessionFailed }).catch(() => void 0);
-      }
-    };
     startClock(() => refreshTimes(root, store));
     const paused = () => {
       page.classList.toggle("is-paused", document.hidden);
@@ -5588,12 +5552,6 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
     board.addEventListener("click", (event) => {
       const target = event.target;
       if (target.closest(".b-twist")) return;
-      const newSession = target.closest("[data-new-session]");
-      if (newSession?.dataset.newSession) {
-        const project = store.allProjects().find((item) => item.id === newSession.dataset.newSession);
-        if (project) void startNewSession(project);
-        return;
-      }
       const cardMore = target.closest("[data-card-more]");
       if (cardMore?.dataset.cardMore) {
         const id = cardMore.dataset.cardMore;
@@ -5634,7 +5592,6 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
     board.addEventListener("keydown", (event) => {
       if (event.key !== "Enter" && event.key !== " ") return;
       const target = event.target;
-      if (target.closest(".padd")) return;
       const cardHead = target.closest("[data-card]");
       if (cardHead?.dataset.card) {
         event.preventDefault();

@@ -443,12 +443,6 @@ export const PAGE_STYLE = String.raw`
   color: var(--tone-text, var(--oc-fg));
 }
 .pchead .tri { margin-left: 2px; color: var(--oc-muted); transition: transform 200ms var(--ease); }
-.padd {
-  flex: none; width: 20px; height: 20px; border-radius: 4px; display: grid; place-items: center;
-  color: var(--oc-muted); font-size: 14px; line-height: 1;
-  transition: color var(--d-feedback) var(--ease), background var(--d-feedback) var(--ease);
-}
-.padd:hover, .padd:focus-visible { color: var(--oc-fg); background: var(--oc-hover); }
 .pchead[aria-expanded="true"] .tri { transform: rotate(90deg); }
 .chipb {
   flex: none; font-size: 10px; font-weight: 500; line-height: 16px; padding: 0 5px;
@@ -603,7 +597,6 @@ export const PAGE_STYLE = String.raw`
   .bdot[data-state="retrying"]::after { animation: none; opacity: .7; }
   .brow.land, .chipb.pop { animation: none; }
   .cr-dot[data-hot="1"]::before, .ncard[data-hot="1"]::after { animation: none; opacity: .45; }
-  .padd { transition: none; }
 }
 `;
 

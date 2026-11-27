@@ -1435,22 +1435,6 @@ function mountPage(): void {
   render();
   void store.start();
 
-  const startNewSession = async (project: GuestProject): Promise<void> => {
-    try {
-      const result = await host.startSession({
-        providerId: 'needs-you',
-        id: `needs-you-${Date.now()}`,
-        title: t().board.newSessionTitle,
-        url: '',
-        projectId: project.id,
-        navigation: 'open',
-      });
-      if (result.sessionId === null) throw new Error(result.failure);
-    } catch {
-      void host.toast({ kind: 'error', message: t().board.newSessionFailed }).catch(() => undefined);
-    }
-  };
-
   startClock(() => refreshTimes(root!, store));
 
   const paused = (): void => {
@@ -1492,12 +1476,6 @@ function mountPage(): void {
   board.addEventListener('click', (event) => {
     const target = event.target as HTMLElement;
     if (target.closest('.b-twist')) return;
-    const newSession = target.closest<HTMLElement>('[data-new-session]');
-    if (newSession?.dataset.newSession) {
-      const project = store.allProjects().find((item) => item.id === newSession.dataset.newSession);
-      if (project) void startNewSession(project);
-      return;
-    }
     const cardMore = target.closest<HTMLElement>('[data-card-more]');
     if (cardMore?.dataset.cardMore) {
       const id = cardMore.dataset.cardMore;
@@ -1539,7 +1517,6 @@ function mountPage(): void {
   board.addEventListener('keydown', (event) => {
     if (event.key !== 'Enter' && event.key !== ' ') return;
     const target = event.target as HTMLElement;
-    if (target.closest('.padd')) return;
     const cardHead = target.closest<HTMLElement>('[data-card]');
     if (cardHead?.dataset.card) {
       event.preventDefault();

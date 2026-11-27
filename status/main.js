@@ -2665,10 +2665,7 @@ ${GUEST_UI_LOOK_CSS}`;
       moreSessions: (n) => `\u8FD8\u6709 ${n} \u4E2A\u4F1A\u8BDD`,
       moreRows: (n) => `\u8FD8\u6709 ${n} \u4E2A`,
       showAll: "\u663E\u793A\u5168\u90E8",
-      fewerSessions: "\u6536\u8D77",
-      newSession: "\u65B0\u5EFA\u4F1A\u8BDD",
-      newSessionTitle: "\u65B0\u4F1A\u8BDD",
-      newSessionFailed: "\u65B0\u5EFA\u4F1A\u8BDD\u5931\u8D25\uFF0C\u8BF7\u91CD\u8BD5"
+      fewerSessions: "\u6536\u8D77"
     },
     action: {
       open: "\u6253\u5F00\u4F1A\u8BDD",
@@ -2819,10 +2816,7 @@ ${GUEST_UI_LOOK_CSS}`;
       moreSessions: (n) => `${n} more sessions`,
       moreRows: (n) => `${n} more`,
       showAll: "Show all",
-      fewerSessions: "Show fewer",
-      newSession: "New session",
-      newSessionTitle: "New session",
-      newSessionFailed: "Could not start a session"
+      fewerSessions: "Show fewer"
     },
     action: {
       open: "Open session",
@@ -3434,12 +3428,6 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
   color: var(--tone-text, var(--oc-fg));
 }
 .pchead .tri { margin-left: 2px; color: var(--oc-muted); transition: transform 200ms var(--ease); }
-.padd {
-  flex: none; width: 20px; height: 20px; border-radius: 4px; display: grid; place-items: center;
-  color: var(--oc-muted); font-size: 14px; line-height: 1;
-  transition: color var(--d-feedback) var(--ease), background var(--d-feedback) var(--ease);
-}
-.padd:hover, .padd:focus-visible { color: var(--oc-fg); background: var(--oc-hover); }
 .pchead[aria-expanded="true"] .tri { transform: rotate(90deg); }
 .chipb {
   flex: none; font-size: 10px; font-weight: 500; line-height: 16px; padding: 0 5px;
@@ -3594,7 +3582,6 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
   .bdot[data-state="retrying"]::after { animation: none; opacity: .7; }
   .brow.land, .chipb.pop { animation: none; }
   .cr-dot[data-hot="1"]::before, .ncard[data-hot="1"]::after { animation: none; opacity: .45; }
-  .padd { transition: none; }
 }
 `;
   var STATUS_STYLE = String.raw`
